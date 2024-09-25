@@ -14,7 +14,6 @@ import AdbIcon from '@mui/icons-material/Adb';
 import { Link as RouterLink } from 'react-router-dom';
 import { useTheme } from '@mui/material/styles';
 import Link from '@mui/material/Link';
-import Button from '@mui/material/Button';
 
 const pages = [
   { name: 'Hem', path: '/' },
@@ -25,7 +24,7 @@ const pages = [
   { name: 'Bli medlem', path: '/register' }
 ];
 const settings = [
-  { name: 'Skytte Resultat', path: '/member' },
+  { name: 'Skytte Resultat', path: '/memberArea' },
   { name: 'Konto', path: '/accountDetails' },
   { name: 'Admin', path: '/admin' },
   { name: 'Logout', path: '/' }
@@ -42,7 +41,7 @@ function Navbar() {
   const [anchorElNav, setAnchorElNav] = React.useState(null);
   const [anchorElUser, setAnchorElUser] = React.useState(null);
   const [anchorElSkjutbanor, setAnchorElSkjutbanor] = React.useState(null);
-  const [isLoggedIn, setIsLoggedIn] = React.useState(false); // New state for login status
+  const [isLoggedIn, setIsLoggedIn] = React.useState(false);
 
   const handleOpenNavMenu = (event) => {
     setAnchorElNav(event.currentTarget);
@@ -155,6 +154,13 @@ function Navbar() {
                       </MenuItem>,
                     ]
               )}
+              {!isLoggedIn && (
+                <MenuItem onClick={handleCloseNavMenu}>
+                  <Link component={RouterLink} to="/login" sx={linkStyle}>
+                    <Typography>Logga in</Typography>
+                  </Link>
+                </MenuItem>
+              )}
             </Menu>
           </Box>
           <AdbIcon sx={{ display: { xs: 'flex', md: 'none' }, mr: 1 }} />
@@ -224,7 +230,7 @@ function Navbar() {
               )
             ))}
           </Box>
-          <Box sx={{ flexGrow: 0 }}>
+          <Box sx={{ flexGrow: 0, display: { xs: 'none', md: 'flex' } }}>
             {isLoggedIn ? (
               <>
                 <Tooltip title="Open settings">
@@ -256,13 +262,14 @@ function Navbar() {
                 </Menu>
               </>
             ) : (
-              <Button 
-                color="inherit" 
-                onClick={handleLogin}
-                sx={{ ...linkStyle, my: 2, display: 'block' }}
+              <Link
+                component={RouterLink}
+                to="/login"
+                onClick={handleCloseNavMenu}
+                sx={{ ...linkStyle, my: 2, color: 'white', display: 'block' }}
               >
                 Logga in
-              </Button>
+              </Link>
             )}
           </Box>
         </Toolbar>
