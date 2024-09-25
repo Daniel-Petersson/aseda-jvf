@@ -86,7 +86,7 @@ function Navbar() {
     <AppBar position="static" sx={{ backgroundColor: theme.palette.primary.main }}>
       <Container maxWidth="xl">
         <Toolbar disableGutters>
-          <AdbIcon sx={{ display: { xs: 'none', md: 'flex' }, mr: 1 }} />
+          
           <Typography
             variant="h6"
             noWrap

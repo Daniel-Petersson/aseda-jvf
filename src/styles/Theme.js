@@ -217,7 +217,7 @@ const theme = createTheme({
     MuiIconButton: {
       styleOverrides: {
         root: {
-          color: 'inherit', // This will make the icon inherit the color from its parent
+          color: '#F8F8F8', // White color for icon buttons
           '&:hover': {
             backgroundColor: 'rgba(212, 161, 94, 0.2)', // Light gold background on hover
           },

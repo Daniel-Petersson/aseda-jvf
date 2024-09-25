@@ -11,22 +11,19 @@ import theme from '../styles/Theme';
 const steps = ['Förberedelser & Utbildning', 'Teoriprovet', 'Praktiska Provet - Kulgevär', 'Praktiska Provet - Hagelgevär', 'Högviltprov', 'Vad kostar det?'];
 
 const JagarExamen = () => {
-  const [expandedCard, setExpandedCard] = useState(null); // State to track expanded card
-  const [activeStep, setActiveStep] = useState(0); // State to track current step
+  const [expandedCard, setExpandedCard] = useState(null);
+  const [activeStep, setActiveStep] = useState(0);
 
   const handleExpandClick = (cardIndex) => {
-    // Toggle expand/collapse for a card
     setExpandedCard(expandedCard === cardIndex ? null : cardIndex);
-    setActiveStep(cardIndex); // Sync stepper with expanded card
+    setActiveStep(cardIndex);
   };
 
   return (
     <ThemeProvider theme={theme}>
-      <Box sx={{ backgroundColor: '#F8F8F8', minHeight: '100vh', paddingY: 4 }}>
+      <Box sx={{ backgroundColor: 'background.default', minHeight: '100vh', paddingY: 4 }}>
         <Container>
-          {/* Add spacing between header and stepper */}
           <Box mt={4}>
-            {/* Stepper for Progress */}
             <Stepper activeStep={activeStep} alternativeLabel>
               {steps.map((label) => (
                 <Step key={label}>
@@ -36,21 +33,20 @@ const JagarExamen = () => {
             </Stepper>
           </Box>
 
-          {/* Grid for Cards */}
-          <Grid container spacing={4} style={{ marginTop: '20px', marginBottom: '20px' }}>
+          <Grid container spacing={4} sx={{ marginTop: '20px', marginBottom: '20px' }}>
             {/* Card 1: Förberedelser & Utbildning */}
             <Grid item xs={12} sm={6} md={4}>
-              <Card sx={{ backgroundColor: '#F0F0F0' }}>
+              <Card>
                 <CardHeader
-                  avatar={<SchoolIcon fontSize="large" sx={{ color: '#5D6651' }} />}
-                  title={<Typography variant="h6" sx={{ color: '#5D6651' }}>Förberedelser & Utbildning</Typography>}
+                  avatar={<SchoolIcon fontSize="large" color="primary" />}
+                  title="Förberedelser & Utbildning"
                 />
                 <CardContent>
-                  <Typography variant="body2" sx={{ color: '#5D6651' }}>
+                  <Typography variant="body2">
                     Välj mellan studiecirkel eller intensivkurs för att förbereda dig för jägarexamen.
                   </Typography>
                   <Collapse in={expandedCard === 0}>
-                    <Typography variant="body2" sx={{ color: '#5D6651', marginTop: '10px' }}>
+                    <Typography variant="body2" sx={{ marginTop: '10px' }}>
                       Svenska Jägareförbundet samarbetar med Studiefrämjandet. Det finns även möjlighet till en intensivutbildning med teori i förväg, följt av några dagar med praktisk utbildning och god mat. Titta in på välrenommerade <a href="https://www.asaherrgard.se/" target="_blank" rel="noopener noreferrer">Asa Herrgård</a>
                     </Typography>
                   </Collapse>
@@ -60,13 +56,6 @@ const JagarExamen = () => {
                     size="small" 
                     variant="cardButton" 
                     onClick={() => handleExpandClick(0)}
-                    sx={{
-                      color: '#5D6651',
-                      '&:hover': {
-                        backgroundColor: 'transparent',
-                        color: '#D4A15E',
-                      },
-                    }}
                   >
                     {expandedCard === 0 ? 'Visa mindre' : 'Läs mer'}
                   </Button>
