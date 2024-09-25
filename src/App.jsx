@@ -14,8 +14,7 @@ import Calendar from './pages/Calendar';
 import NewsPage from './pages/News';
 import MemberArea from './pages/MemberArea';
 import AdminPanel from './pages/AdminPanel';
-
-// Importera andra sidor här
+import ShootingSession from './components/common/ShootingSession';
 
 function App() {
   return (
@@ -36,6 +35,8 @@ function App() {
           <Route path="accountDetails" element={<AccountDetails />} />
           <Route path="member" element={<MemberArea />} />
           <Route path="admin" element={<AdminPanel />} />
+          <Route path="admin/shooting-session" element={<ShootingSession />} />
+          <Route path="admin/sessions" element={<ShootingSession />} />
         </Route>
       </Routes>
     </Router>

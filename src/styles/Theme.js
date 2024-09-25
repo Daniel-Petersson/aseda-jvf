@@ -175,6 +175,71 @@ const theme = createTheme({
         },
       },
     },
+    MuiDrawer: {
+      styleOverrides: {
+        paper: {
+          backgroundColor: '#5D6651', // Green background for drawer
+          color: '#F8F8F8', // White text in drawer
+        },
+      },
+    },
+    MuiListItem: {
+      styleOverrides: {
+        root: {
+          '&:hover': {
+            backgroundColor: 'rgba(212, 161, 94, 0.2)', // Light gold background on hover
+          },
+        },
+      },
+    },
+    MuiListItemIcon: {
+      styleOverrides: {
+        root: {
+          color: '#F8F8F8', // White color for list item icons
+        },
+      },
+    },
+    MuiListItemText: {
+      styleOverrides: {
+        primary: {
+          color: '#F8F8F8', // White color for list item text
+        },
+      },
+    },
+    MuiIconButton: {
+      styleOverrides: {
+        root: {
+          color: '#F8F8F8', // White color for icon buttons
+          '&:hover': {
+            backgroundColor: 'rgba(212, 161, 94, 0.2)', // Light gold background on hover
+          },
+        },
+      },
+    },
+    MuiSelect: {
+      styleOverrides: {
+        icon: {
+          color: '#5D6651', // Green color for select icon
+        },
+      },
+    },
+    MuiMenuItem: {
+      styleOverrides: {
+        root: {
+          color: '#5D6651', // Green text for menu items
+          '&:hover': {
+            backgroundColor: 'rgba(212, 161, 94, 0.2)', // Light gold background on hover
+          },
+          '&.Mui-selected': {
+            backgroundColor: '#D4A15E', // Gold background for selected item
+            color: '#5D6651', // Green text for selected item
+            '&:hover': {
+              backgroundColor: '#D4A15E', // Keep gold background on hover for selected item
+            },
+          },
+        },
+      },
+    },
   },
 });
 
