@@ -36,6 +36,14 @@ const theme = createTheme({
       fontWeight: 600,
       color: '#D4A15E',
     },
+    h5: {
+      fontWeight: 600,
+      color: '#D4A15E',
+    },
+    h6: {
+      fontWeight: 600,
+      color: '#D4A15E',
+    },
     body1: {
       fontWeight: 400,
       color: '#5D6651', // Green text for body content
@@ -209,7 +217,7 @@ const theme = createTheme({
     MuiIconButton: {
       styleOverrides: {
         root: {
-          color: '#F8F8F8', // White color for icon buttons
+          color: 'inherit', // This will make the icon inherit the color from its parent
           '&:hover': {
             backgroundColor: 'rgba(212, 161, 94, 0.2)', // Light gold background on hover
           },
@@ -236,6 +244,16 @@ const theme = createTheme({
             '&:hover': {
               backgroundColor: '#D4A15E', // Keep gold background on hover for selected item
             },
+          },
+        },
+      },
+    },
+    MuiPaper: {
+      styleOverrides: {
+        root: {
+          backgroundColor: '#F0F0F0', // Consistent with card background
+          '&.MemberAreaPaper': {
+            border: '1px solid #5D6651', // Add a subtle border
           },
         },
       },

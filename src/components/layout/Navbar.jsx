@@ -25,7 +25,7 @@ const pages = [
   { name: 'Bli medlem', path: '/register' }
 ];
 const settings = [
-  { name: 'Profile', action: '/member' },
+  { name: 'Skytte Resultat', path: '/member' },
   { name: 'Konto', path: '/accountDetails' },
   { name: 'Admin', path: '/admin' },
   { name: 'Logout', path: '/' }
