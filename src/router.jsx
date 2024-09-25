@@ -17,6 +17,7 @@ import Register from './pages/Register';
 import AccountDetails from './pages/AccountDetails';
 import NewsPage from './pages/News';
 
+
 // import ProtectedRoute from './components/common/ProtectedRoute'; // Commented out
 
 const AppRouter = () => {
