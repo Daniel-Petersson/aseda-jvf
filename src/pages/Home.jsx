@@ -32,7 +32,7 @@ const Home = () => {
             <Typography variant="h2" component="h1" gutterBottom>
               Välkommen till Åseda Jaktvårdsförening
             </Typography>
-            <Typography variant="h5" paragraph>
+            <Typography variant="body1" paragraph>
             Vår förening erbjuder en mängd olika aktiviteter och tjänster för jägare och naturälskare. 
             Vi har moderna skjutbanor, utbildningar och evenemang som passar både nybörjare och erfarna jägare.
             </Typography>
