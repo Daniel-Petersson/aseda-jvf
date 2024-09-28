@@ -16,6 +16,7 @@ import { useTheme } from '@mui/material/styles';
 import Link from '@mui/material/Link';
 import { useCookies } from 'react-cookie';
 import { useNavigate } from 'react-router-dom';
+import { jwtDecode } from 'jwt-decode'; // Make sure to import jwtDecode
 
 function Navbar() {
   const theme = useTheme();
@@ -24,6 +25,22 @@ function Navbar() {
   const [anchorElSkjutbanor, setAnchorElSkjutbanor] = React.useState(null);
   const [cookies, setCookie, removeCookie] = useCookies(['token']);
   const navigate = useNavigate();
+  const [userRole, setUserRole] = React.useState('');
+
+  React.useEffect(() => {
+    if (cookies.token) {
+      try {
+        const decodedToken = jwtDecode(cookies.token);
+        setUserRole(decodedToken.role || 'member');
+      } catch (error) {
+        console.error('Error decoding token:', error);
+        setUserRole('member');
+      }
+    } else {
+      setUserRole('');
+    }
+  }, [cookies.token]);
+
   const isLoggedIn = !!cookies.token;
 
   const pages = [
@@ -39,12 +56,17 @@ function Navbar() {
     pages.push({ name: 'Bli medlem', path: '/register' });
   }
 
+  
   const settings = [
     { name: 'Skytte Resultat', path: '/member' },
     { name: 'Medlemsuppgifter', path: '/accountDetails' },
-    { name: 'Admin', path: '/admin' },
     { name: 'Logga ut', path: '/' }
   ];
+
+  // Add Admin link only for admin users
+  if (userRole === 'ADMIN'||userRole === 'INSTRUCTOR') {
+    settings.splice(2, 0, { name: 'Admin', path: '/admin' });
+  }
 
   const skjutbanorOptions = [
     { name: 'Älgbana', path: '/algbana' },
@@ -81,6 +103,7 @@ function Navbar() {
 
   const handleLogout = () => {
     removeCookie('token', { path: '/' });
+    setUserRole('');
     handleCloseUserMenu();
     navigate('/');
   };

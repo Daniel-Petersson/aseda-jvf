@@ -1,27 +1,34 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Box, Typography, Paper, Alert, Button } from '@mui/material';
+import { Box, Typography, Paper, Alert, Button, Checkbox, FormControlLabel, Link } from '@mui/material';
 import { registerMember } from '../services/MemberService';
 import MemberForm from '../components/common/MemberForm';
 
 function Register() {
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(false);
+  const [termsAccepted, setTermsAccepted] = useState(false);
+  const [privacyAccepted, setPrivacyAccepted] = useState(false);
   const navigate = useNavigate();
 
   const handleSubmit = async (memberData) => {
+    if (!termsAccepted || !privacyAccepted) {
+      setError('Du måste acceptera villkoren och integritetspolicyn för att registrera dig.');
+      return;
+    }
+
     try {
       const result = await registerMember(memberData);
       if (result.success) {
         setSuccess(true);
         setError(null);
       } else {
-        setError(result.error || 'An error occurred while registering.');
+        setError(result.error || 'Ett fel uppstod vid registreringen.');
         setSuccess(false);
       }
     } catch (error) {
-      console.error('Error registering member:', error);
-      setError('An unexpected error occurred. Please try again.');
+      console.error('Fel vid registrering av medlem:', error);
+      setError('Ett oväntat fel inträffade. Vänligen försök igen.');
       setSuccess(false);
     }
   };
@@ -56,7 +63,7 @@ function Register() {
         {success ? (
           <>
             <Alert severity="success" sx={{ mb: 2 }}>
-              Registration successful! You can now log in.
+              Registreringen lyckades! Du kan nu logga in.
             </Alert>
             <Button
               variant="contained"
@@ -65,11 +72,29 @@ function Register() {
               onClick={handleLoginNavigation}
               sx={{ mt: 2 }}
             >
-              Go to Login
+              Gå till inloggning
             </Button>
           </>
         ) : (
-          <MemberForm onSubmit={handleSubmit} />
+          <>
+            <MemberForm 
+              onSubmit={handleSubmit} 
+              isEditing={true} 
+              submitButtonText="Registrera"
+            />
+            <FormControlLabel
+              control={<Checkbox checked={termsAccepted} onChange={(e) => setTermsAccepted(e.target.checked)} />}
+              label={<>Jag accepterar <Link href="/terms" target="_blank">användarvillkoren</Link></>}
+            />
+            <FormControlLabel
+              control={<Checkbox checked={privacyAccepted} onChange={(e) => setPrivacyAccepted(e.target.checked)} />}
+              label={<>Jag har läst och godkänner <Link href="/privacy" target="_blank">integritetspolicyn</Link></>}
+            />
+            <Typography variant="body2" sx={{ mt: 2 }}>
+              Vi samlar endast in nödvändig information för att hantera ditt medlemskap. 
+              Dina uppgifter behandlas säkert och delas inte med tredje part utan ditt samtycke.
+            </Typography>
+          </>
         )}
       </Paper>
     </Box>

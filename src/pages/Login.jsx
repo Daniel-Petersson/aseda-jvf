@@ -33,15 +33,7 @@ function Login() {
     event.preventDefault();
     try {
       const result = await authenticateMember({ email, password });
-      
-      // Logga hela resultatet för att se exakt vad som returneras
-      console.log('Response from backend:', result);
-      
-      // Förväntad token finns direkt under result.data, verifiera och logga
-      const token = result.data; // <-- Ändra detta om du ser att token finns här
-      console.log('Token received from backend:', token);
-  
-      // Sätt token i kakan om den finns
+      const token = result.data; 
       if (token) {
         setCookie('token', token, { 
           path: '/', 
@@ -49,7 +41,6 @@ function Login() {
           sameSite: 'strict', 
           secure: process.env.NODE_ENV === 'production'
         });
-        console.log('Token set in cookie:', token);
         navigate('/member');
       } else {
         console.error('Authentication failed or token is missing:', result);
