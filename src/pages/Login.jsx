@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Container, 
   Box, 
@@ -20,19 +20,43 @@ function Login() {
   const [cookies, setCookie] = useCookies(['token']);
   const navigate = useNavigate(); // Använd useNavigate hook
 
+  useEffect(() => {
+    // Check if the token cookie exists when the component mounts
+    if (cookies.token) {
+      console.log('Existing token found:', cookies.token);
+    } else {
+      console.log('No existing token found');
+    }
+  }, [cookies.token]);
+
   const handleSubmit = async (event) => {
-    event.preventDefault(); // Förhindra standard form submission
+    event.preventDefault();
     try {
       const result = await authenticateMember({ email, password });
-      if (result.success) {
-        console.log('Login successful:', result.data);
-        setCookie('token', result.data.token);
+      
+      // Logga hela resultatet för att se exakt vad som returneras
+      console.log('Response from backend:', result);
+      
+      // Förväntad token finns direkt under result.data, verifiera och logga
+      const token = result.data; // <-- Ändra detta om du ser att token finns här
+      console.log('Token received from backend:', token);
+  
+      // Sätt token i kakan om den finns
+      if (token) {
+        setCookie('token', token, { 
+          path: '/', 
+          maxAge: 3600, 
+          sameSite: 'strict', 
+          secure: process.env.NODE_ENV === 'production'
+        });
+        console.log('Token set in cookie:', token);
         navigate('/member');
       } else {
-        setError(result.error || 'An error occurred while logging in.');
+        console.error('Authentication failed or token is missing:', result);
+        setError(result.error || 'Authentication failed. No token returned.');
       }
     } catch (error) {
-      console.error('Error during login:', error);
+      console.error('Unexpected error during login:', error);
       setError('An unexpected error occurred. Please try again.');
     }
   };

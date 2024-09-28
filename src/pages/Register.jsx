@@ -11,15 +11,11 @@ function Register() {
 
   const handleSubmit = async (memberData) => {
     try {
-      console.log('Starting registration process');
       const result = await registerMember(memberData);
-      console.log('Registration result:', result);
       if (result.success) {
-        console.log('Member registered successfully:', result.data);
         setSuccess(true);
         setError(null);
       } else {
-        console.log('Registration failed:', result.error);
         setError(result.error || 'An error occurred while registering.');
         setSuccess(false);
       }

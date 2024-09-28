@@ -47,7 +47,7 @@ export const authenticateMember = async (member) => {
 
 export const getMember = async (memberId) => {
     try {
-        const response = await axios.get(`${REST_API_MEMBER_URL}${memberId}`);
+        const response = await axios.get(`${REST_API_MEMBER_URL}${memberId}/`);
         return { success: true, data: response.data };
     } catch (error) {
         console.error("Error getting member:", error);
@@ -63,7 +63,7 @@ export const getMember = async (memberId) => {
 
 export const updateMember = async (memberId, member) => {
     try {
-        const response = await axios.put(`${REST_API_MEMBER_URL}${memberId}`, member);
+        const response = await axios.put(`${REST_API_MEMBER_URL}${memberId}/`, member);
         return { success: true, data: response.data };
     } catch (error) {
         console.error("Error updating member:", error);

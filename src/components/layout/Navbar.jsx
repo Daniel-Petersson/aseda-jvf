@@ -14,35 +14,44 @@ import AdbIcon from '@mui/icons-material/Adb';
 import { Link as RouterLink } from 'react-router-dom';
 import { useTheme } from '@mui/material/styles';
 import Link from '@mui/material/Link';
-import { hasRole } from '../../utils/authUtils';
-
-const pages = [
-  { name: 'Hem', path: '/' },
-  { name: 'Skjutbanor', subMenu: true },
-  { name: 'Jägarexamen', path: '/jagarExamen' },
-  { name: 'Kalender', path: '/calendar' },
-  { name: 'Nyheter', path: '/news' },
-  { name: 'Bli medlem', path: '/register' }
-];
-const settings = [
-  { name: 'Skytte Resultat', path: '/memberArea' },
-  { name: 'Konto', path: '/accountDetails' },
-  { name: 'Admin', path: '/admin' },
-  { name: 'Logout', path: '/' }
-];
-const skjutbanorOptions = [
-  { name: 'Älgbana', path: '/algbana' },
-  { name: 'Viltmålsbana', path: '/viltmalsbana' },
-  { name: 'Inskjutningsbana', path: '/inskjutning' },
-  { name: 'Trapp och skeetbana', path: '/trappSkeet' }
-];
+import { useCookies } from 'react-cookie';
+import { useNavigate } from 'react-router-dom';
 
 function Navbar() {
   const theme = useTheme();
   const [anchorElNav, setAnchorElNav] = React.useState(null);
   const [anchorElUser, setAnchorElUser] = React.useState(null);
   const [anchorElSkjutbanor, setAnchorElSkjutbanor] = React.useState(null);
-  const [isLoggedIn, setIsLoggedIn] = React.useState(false);
+  const [cookies, setCookie, removeCookie] = useCookies(['token']);
+  const navigate = useNavigate();
+  const isLoggedIn = !!cookies.token;
+
+  const pages = [
+    { name: 'Hem', path: '/' },
+    { name: 'Skjutbanor', subMenu: true },
+    { name: 'Jägarexamen', path: '/jagarExamen' },
+    { name: 'Kalender', path: '/calendar' },
+    { name: 'Nyheter', path: '/news' },
+  ];
+
+  // Add "Bli medlem" only if not logged in
+  if (!isLoggedIn) {
+    pages.push({ name: 'Bli medlem', path: '/register' });
+  }
+
+  const settings = [
+    { name: 'Skytte Resultat', path: '/member' },
+    { name: 'Medlemsuppgifter', path: '/accountDetails' },
+    { name: 'Admin', path: '/admin' },
+    { name: 'Logga ut', path: '/' }
+  ];
+
+  const skjutbanorOptions = [
+    { name: 'Älgbana', path: '/algbana' },
+    { name: 'Viltmålsbana', path: '/viltmalsbana' },
+    { name: 'Inskjutningsbana', path: '/inskjutning' },
+    { name: 'Trapp och skeetbana', path: '/trappSkeet' }
+  ];
 
   const handleOpenNavMenu = (event) => {
     setAnchorElNav(event.currentTarget);
@@ -71,8 +80,9 @@ function Navbar() {
   };
 
   const handleLogout = () => {
-    setIsLoggedIn(false);
+    removeCookie('token', { path: '/' });
     handleCloseUserMenu();
+    navigate('/');
   };
 
   const linkStyle = {
@@ -256,7 +266,12 @@ function Navbar() {
                   onClose={handleCloseUserMenu}
                 >
                   {settings.map((setting) => (
-                    <MenuItem key={setting.name} onClick={handleCloseUserMenu} component={RouterLink} to={setting.path}>
+                    <MenuItem 
+                      key={setting.name} 
+                      onClick={setting.name === 'Logga ut' ? handleLogout : handleCloseUserMenu} 
+                      component={setting.name === 'Logga ut' ? 'button' : RouterLink} 
+                      to={setting.name !== 'Logga ut' ? setting.path : undefined}
+                    >
                       <Typography textAlign="center">{setting.name}</Typography>
                     </MenuItem>
                   ))}

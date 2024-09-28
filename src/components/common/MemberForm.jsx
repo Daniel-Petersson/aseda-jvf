@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { TextField, Button, Grid, Box, Typography } from '@mui/material';
 
-const MemberForm = ({ onSubmit }) => {
+const MemberForm = ({ onSubmit, initialData, isEditing, submitButtonText }) => {
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -13,6 +13,22 @@ const MemberForm = ({ onSubmit }) => {
     password: '',
     confirmPassword: '',
   });
+
+  useEffect(() => {
+    if (initialData) {
+      setFormData({
+        firstName: initialData.firstName || '',
+        lastName: initialData.lastName || '',
+        address: initialData.address || '',
+        postalCode: initialData.postalCode || '',
+        city: initialData.city || '',
+        phone: initialData.phone || '',
+        email: initialData.email || '',
+        password: '',
+        confirmPassword: '',
+      });
+    }
+  }, [initialData]);
 
   const handleChange = (event) => {
     const { name, value } = event.target;
@@ -38,8 +54,8 @@ const MemberForm = ({ onSubmit }) => {
           { name: "city", label: "Postort" },
           { name: "phone", label: "Telefon" },
           { name: "email", label: "E-post", type: "email" },
-          { name: "password", label: "Lösenord", type: "password" },
-          { name: "confirmPassword", label: "Bekräfta lösenord", type: "password" },
+          { name: "password", label: "Lösenord", type: "password", autoComplete: "new-password" },
+          { name: "confirmPassword", label: "Bekräfta lösenord", type: "password", autoComplete: "new-password" },
         ].map((field) => (
           <Grid item xs={12} sm={field.name === "postalCode" || field.name === "city" ? 6 : 12} key={field.name}>
             <TextField
@@ -51,23 +67,13 @@ const MemberForm = ({ onSubmit }) => {
               type={field.type || "text"}
               value={formData[field.name]}
               onChange={handleChange}
+              disabled={!isEditing}
+              autoComplete={field.autoComplete}
             />
           </Grid>
         ))}
       </Grid>
-      <Box mt={3}>
-        <Typography variant="body2" gutterBottom>
-          Medlemsavgift:
-        </Typography>
-        <Typography variant="body2" gutterBottom>
-          • 300:- för senior
-        </Typography>
-        <Typography variant="body2" gutterBottom>
-          • 50:- för junior / under 18 år
-        </Typography>
-        <Typography variant="body2" gutterBottom>
-          Glöm inte att sätta in pengarna på bg 5176-9123, eller SWISH 1232302529.
-        </Typography>
+      {isEditing && (
         <Button
           variant="contained"
           color="primary"
@@ -76,9 +82,9 @@ const MemberForm = ({ onSubmit }) => {
           size="large"
           sx={{ mt: 3 }}
         >
-          Bli medlem
+          {submitButtonText}
         </Button>
-      </Box>
+      )}
     </Box>
   );
 };
