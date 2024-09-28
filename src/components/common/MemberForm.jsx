@@ -44,16 +44,16 @@ const MemberForm = ({ onSubmit, initialData, isEditing, submitButtonText }) => {
   };
 
   return (
-    <Box component="form" noValidate autoComplete="off" mt={3} onSubmit={handleSubmit}>
+    <Box component="form" noValidate onSubmit={handleSubmit}>
       <Grid container spacing={2}>
         {[ 
-          { name: "firstName", label: "Förnamn" },
-          { name: "lastName", label: "Efternamn" },
-          { name: "address", label: "Adress" },
-          { name: "postalCode", label: "Postnummer" },
-          { name: "city", label: "Postort" },
-          { name: "phone", label: "Telefon" },
-          { name: "email", label: "E-post", type: "email" },
+          { name: "firstName", label: "Förnamn", autoComplete: "given-name" },
+          { name: "lastName", label: "Efternamn", autoComplete: "family-name" },
+          { name: "address", label: "Adress", autoComplete: "street-address" },
+          { name: "postalCode", label: "Postnummer", autoComplete: "postal-code" },
+          { name: "city", label: "Postort", autoComplete: "address-level2" },
+          { name: "phone", label: "Telefon", autoComplete: "tel" },
+          { name: "email", label: "E-post", type: "email", autoComplete: "username" },
           { name: "password", label: "Lösenord", type: "password", autoComplete: "new-password" },
           { name: "confirmPassword", label: "Bekräfta lösenord", type: "password", autoComplete: "new-password" },
         ].map((field) => (
