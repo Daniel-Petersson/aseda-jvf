@@ -1,7 +1,9 @@
 import { jwtDecode } from 'jwt-decode';
+import { useCookies } from 'react-cookie';
 
 export const getUserRole = () => {
-  const token = localStorage.getItem('token');
+  const [cookies] = useCookies(['token']);
+  const token = cookies.token;
   if (!token) return null;
   
   try {
@@ -19,7 +21,8 @@ export const hasRole = (allowedRoles) => {
 };
 
 export const isAuthenticated = () => {
-  const token = localStorage.getItem('token');
+  const [cookies] = useCookies(['token']);
+  const token = cookies.token;
   if (!token) return false;
   
   try {

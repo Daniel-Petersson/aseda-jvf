@@ -26,7 +26,7 @@ function Login() {
       const result = await authenticateMember({ email, password });
       if (result.success) {
         console.log('Login successful:', result.data);
-        localStorage.setItem('token', result.data.token);
+        setCookie('token', result.data.token);
         navigate('/member');
       } else {
         setError(result.error || 'An error occurred while logging in.');
