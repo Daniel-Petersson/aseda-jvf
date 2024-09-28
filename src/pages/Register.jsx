@@ -50,10 +50,10 @@ function Register() {
     >
       <Paper elevation={3} sx={{ p: 4, maxWidth: 600, width: '100%' }}>
         <Typography variant="h4" gutterBottom align="center">
-          Föreningsregistret
+        Välkommen till vårt medlemsregister!
         </Typography>
         <Typography variant="body1" gutterBottom align="center">
-          Ange dina uppgifter för att komma med i föreningsregistret!
+        Vill du bli en del av vår gemenskap? Fyll i dina uppgifter nedan för att registrera dig som medlem i föreningen. Som medlem får du möjlighet att delta i våra aktiviteter, påverka föreningens arbete och träffa likasinnade. Välkommen in!
         </Typography>
         {error && (
           <Alert severity="error" sx={{ mb: 2 }}>
