@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Layout from './components/layout/Layout';
 import Home from './pages/Home';
 import Booking from './pages/Booking';
@@ -15,6 +15,9 @@ import NewsPage from './pages/News';
 import MemberArea from './pages/MemberArea';
 import AdminPanel from './pages/AdminPanel';
 import ShootingSession from './components/common/ShootingSession';
+import ProtectedRoute from './components/common/ProtectedRoute';
+import NewsManagement from './components/admin/NewsManagement';
+import MemberManagement from './components/admin/MemberManagement';
 
 function App() {
   return (
@@ -34,9 +37,40 @@ function App() {
           <Route path="news" element={<NewsPage />} />
           <Route path="accountDetails" element={<AccountDetails />} />
           <Route path="member" element={<MemberArea />} />
-          <Route path="admin" element={<AdminPanel />} />
-          <Route path="admin/shooting-session" element={<ShootingSession />} />
-          <Route path="admin/sessions" element={<ShootingSession />} />
+          
+          {/* Admin routes */}
+          <Route path="admin" element={
+            <ProtectedRoute 
+              element={AdminPanel} 
+              allowedRoles={['ADMIN']} 
+            />
+          } />
+          <Route path="admin/news" element={
+            <ProtectedRoute 
+              element={NewsManagement} 
+              allowedRoles={['ADMIN']} 
+            />
+          } />
+          <Route path="admin/members" element={
+            <ProtectedRoute 
+              element={MemberManagement} 
+              allowedRoles={['ADMIN']} 
+            />
+          } />
+          
+          {/* Admin and Instructor routes */}
+          <Route path="admin/shooting-session" element={
+            <ProtectedRoute 
+              element={ShootingSession} 
+              allowedRoles={['ADMIN', 'INSTRUCTOR']} 
+            />
+          } />
+          <Route path="admin/sessions" element={
+            <ProtectedRoute 
+              element={ShootingSession} 
+              allowedRoles={['ADMIN', 'INSTRUCTOR']} 
+            />
+          } />
         </Route>
       </Routes>
     </Router>
