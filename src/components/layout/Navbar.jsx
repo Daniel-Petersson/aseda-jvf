@@ -14,6 +14,7 @@ import AdbIcon from '@mui/icons-material/Adb';
 import { Link as RouterLink } from 'react-router-dom';
 import { useTheme } from '@mui/material/styles';
 import Link from '@mui/material/Link';
+import { hasRole } from '../../utils/authUtils';
 
 const pages = [
   { name: 'Hem', path: '/' },

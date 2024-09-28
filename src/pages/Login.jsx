@@ -6,18 +6,35 @@ import {
   TextField, 
   Button, 
   Link, 
-  Paper 
+  Paper,
+  Alert // Lägg till denna import
 } from '@mui/material';
-import { Link as RouterLink } from 'react-router-dom';
+import { Link as RouterLink, useNavigate } from 'react-router-dom'; // Lägg till useNavigate
+import { useCookies } from 'react-cookie'; // Lägg till denna import
+import { authenticateMember } from '../services/MemberService'; // Importera loginMember funktion
 
-const Login = () => {
+function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [error, setError] = useState(''); // Lägg till error state
+  const [cookies, setCookie] = useCookies(['token']);
+  const navigate = useNavigate(); // Använd useNavigate hook
 
-  const handleSubmit = (event) => {
-    event.preventDefault();
-    // Here you would typically handle the login logic
-    console.log('Login attempt with:', { email, password });
+  const handleSubmit = async (event) => {
+    event.preventDefault(); // Förhindra standard form submission
+    try {
+      const result = await authenticateMember({ email, password });
+      if (result.success) {
+        console.log('Login successful:', result.data);
+        localStorage.setItem('token', result.data.token);
+        navigate('/member');
+      } else {
+        setError(result.error || 'An error occurred while logging in.');
+      }
+    } catch (error) {
+      console.error('Error during login:', error);
+      setError('An unexpected error occurred. Please try again.');
+    }
   };
 
   return (
@@ -35,6 +52,7 @@ const Login = () => {
           <Typography component="h1" variant="h5" align="center" gutterBottom>
             Logga in
           </Typography>
+          {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
           <Box component="form" onSubmit={handleSubmit} noValidate sx={{ mt: 1 }}>
             <TextField
               margin="normal"
@@ -78,6 +96,6 @@ const Login = () => {
       </Box>
     </Container>
   );
-};
+}
 
 export default Login;
