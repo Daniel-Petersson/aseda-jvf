@@ -2,7 +2,7 @@ import React, { useState, useEffect, useContext } from 'react';
 import { TextField, Button, Grid, Box, Typography, Select, MenuItem } from '@mui/material';
 import { AuthContext } from '../../utils/AuthContext'; // Importera AuthContext
 
-const MemberForm = ({ onSubmit, initialData, isEditing, submitButtonText }) => {
+const MemberForm = ({ onSubmit, initialData, isEditing, submitButtonText, isRegistration }) => {
   const { user } = useContext(AuthContext); // Använd AuthContext
   const [formData, setFormData] = useState({
     firstName: '',
@@ -14,7 +14,7 @@ const MemberForm = ({ onSubmit, initialData, isEditing, submitButtonText }) => {
     email: '',
     password: '',
     confirmPassword: '',
-    role: '',
+    //role: '', //ändra denna toll optional i MemberDtoForm för att den inte ska krävas när man registrerar
     dateCreated: '',
     dateUpdated: '',
     membershipPaidUntil: '',
@@ -41,7 +41,15 @@ const MemberForm = ({ onSubmit, initialData, isEditing, submitButtonText }) => {
 
   const handleSubmit = (event) => {
     event.preventDefault();
-    onSubmit(formData);
+    if (isRegistration) {
+      // Prepare MemberDtoForm
+      const { confirmPassword, dateCreated, dateUpdated, membershipPaidUntil, active, ...memberDtoForm } = formData;
+      onSubmit(memberDtoForm);
+    } else {
+      // Prepare MemberUpdateDtoForm
+      const { confirmPassword, ...memberUpdateDtoForm } = formData;
+      onSubmit(memberUpdateDtoForm);
+    }
   };
 
   return (

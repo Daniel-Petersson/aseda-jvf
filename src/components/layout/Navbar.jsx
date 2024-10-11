@@ -1,9 +1,9 @@
 import React, { useContext } from 'react';
 import { AppBar, Toolbar, IconButton, Typography, Menu, MenuItem, Box, Container, Avatar, Tooltip, Link } from '@mui/material';
-import MenuIcon from '@mui/icons-material/Menu';
 import { Link as RouterLink, useNavigate } from 'react-router-dom';
 import { AuthContext } from '../../utils/AuthContext';
 import { useTheme } from '@mui/material/styles';
+import klovIcon from '../../assets/klov-icon.jpg'; // Import the image
 
 function Navbar() {
   const theme = useTheme();
@@ -113,7 +113,7 @@ function Navbar() {
               onClick={handleOpenNavMenu}
               color="inherit"
             >
-              <MenuIcon sx={{ color: theme.palette.primary.contrastText }} />
+              <img src={klovIcon} alt="Klov Icon" style={{ width: 24, height: 24 }} /> {/* Use img tag */}
             </IconButton>
             <Menu
               id="menu-appbar"
@@ -244,7 +244,7 @@ function Navbar() {
               <>
                 <Tooltip title="Open settings">
                   <IconButton onClick={handleOpenUserMenu} sx={{ p: 0 }}>
-                    <Avatar alt="User Avatar" src="/static/images/avatar/2.jpg" />
+                    <img src={klovIcon} alt="Klov Icon" style={{ width: 24, height: 24 }} /> {/* Use img tag */}
                   </IconButton>
                 </Tooltip>
                 <Menu
