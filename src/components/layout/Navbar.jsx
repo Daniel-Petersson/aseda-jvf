@@ -1,47 +1,21 @@
-import * as React from 'react';
-import AppBar from '@mui/material/AppBar';
-import Box from '@mui/material/Box';
-import Toolbar from '@mui/material/Toolbar';
-import IconButton from '@mui/material/IconButton';
-import Typography from '@mui/material/Typography';
-import Menu from '@mui/material/Menu';
+import React, { useContext } from 'react';
+import { AppBar, Toolbar, IconButton, Typography, Menu, MenuItem, Box, Container, Avatar, Tooltip, Link } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
-import Container from '@mui/material/Container';
-import Avatar from '@mui/material/Avatar';
-import Tooltip from '@mui/material/Tooltip';
-import MenuItem from '@mui/material/MenuItem';
-import AdbIcon from '@mui/icons-material/Adb';
-import { Link as RouterLink } from 'react-router-dom';
+import AdbIcon from '@mui/icons-material/Adb'; // Import AdbIcon
+import { Link as RouterLink, useNavigate } from 'react-router-dom';
+import { AuthContext } from '../../utils/AuthContext'; // Import AuthContext
 import { useTheme } from '@mui/material/styles';
-import Link from '@mui/material/Link';
-import { useCookies } from 'react-cookie';
-import { useNavigate } from 'react-router-dom';
-import { jwtDecode } from 'jwt-decode'; // Make sure to import jwtDecode
 
 function Navbar() {
   const theme = useTheme();
   const [anchorElNav, setAnchorElNav] = React.useState(null);
   const [anchorElUser, setAnchorElUser] = React.useState(null);
   const [anchorElSkjutbanor, setAnchorElSkjutbanor] = React.useState(null);
-  const [cookies, setCookie, removeCookie] = useCookies(['token']);
   const navigate = useNavigate();
-  const [userRole, setUserRole] = React.useState('');
+  const { user, logout } = useContext(AuthContext); // Use AuthContext
 
-  React.useEffect(() => {
-    if (cookies.token) {
-      try {
-        const decodedToken = jwtDecode(cookies.token);
-        setUserRole(decodedToken.role || 'member');
-      } catch (error) {
-        console.error('Error decoding token:', error);
-        setUserRole('member');
-      }
-    } else {
-      setUserRole('');
-    }
-  }, [cookies.token]);
-
-  const isLoggedIn = !!cookies.token;
+  const isLoggedIn = !!user;
+  const userRole = user?.role || '';
 
   const pages = [
     { name: 'Hem', path: '/' },
@@ -51,20 +25,17 @@ function Navbar() {
     { name: 'Nyheter', path: '/news' },
   ];
 
-  // Add "Bli medlem" only if not logged in
   if (!isLoggedIn) {
     pages.push({ name: 'Bli medlem', path: '/register' });
   }
 
-  
   const settings = [
     { name: 'Skytte Resultat', path: '/member' },
     { name: 'Medlemsuppgifter', path: '/accountDetails' },
     { name: 'Logga ut', path: '/' }
   ];
 
-  // Add Admin link only for admin users
-  if (userRole === 'ADMIN'||userRole === 'INSTRUCTOR') {
+  if (userRole === 'ADMIN' || userRole === 'INSTRUCTOR') {
     settings.splice(2, 0, { name: 'Admin', path: '/admin' });
   }
 
@@ -97,13 +68,8 @@ function Navbar() {
     setAnchorElSkjutbanor(null);
   };
 
-  const handleLogin = () => {
-    setIsLoggedIn(!isLoggedIn);
-  };
-
   const handleLogout = () => {
-    removeCookie('token', { path: '/' });
-    setUserRole('');
+    logout(); // Use logout method from AuthContext
     handleCloseUserMenu();
     navigate('/');
   };
@@ -120,7 +86,6 @@ function Navbar() {
     <AppBar position="static" sx={{ backgroundColor: theme.palette.primary.main }}>
       <Container maxWidth="xl">
         <Toolbar disableGutters>
-          
           <Typography
             variant="h6"
             noWrap

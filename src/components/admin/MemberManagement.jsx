@@ -1,40 +1,73 @@
 import React, { useState, useEffect } from 'react';
-import { Box, Typography, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, IconButton, TextField, TablePagination } from '@mui/material';
+import { Box, Typography, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, IconButton, TextField, TablePagination, Modal, Button, Snackbar, Alert, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
+import { getAllMembers, updateMember } from '../../services/MemberService';
+import MemberForm from '../common/MemberForm';
 
 const MemberManagement = () => {
   const [members, setMembers] = useState([]);
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [searchTerm, setSearchTerm] = useState('');
-
-  // Dummy data
-  const dummyMembers = [
-    { id: 1, firstName: 'John', lastName: 'Doe', email: 'john@example.com', phoneNumber: '123-456-7890', address: '123 Main St', postalCode: '12345', city: 'Anytown', membershipType: 'Full', memberSince: '2022-01-01' },
-    { id: 2, firstName: 'Jane', lastName: 'Smith', email: 'jane@example.com', phoneNumber: '098-765-4321', address: '456 Elm St', postalCode: '67890', city: 'Othertown', membershipType: 'Junior', memberSince: '2022-02-15' },
-    { id: 3, firstName: 'Alice', lastName: 'Johnson', email: 'alice@example.com', phoneNumber: '555-123-4567', address: '789 Oak St', postalCode: '54321', city: 'Smalltown', membershipType: 'Full', memberSince: '2022-03-20' },
-    { id: 4, firstName: 'Bob', lastName: 'Brown', email: 'bob@example.com', phoneNumber: '111-222-3333', address: '321 Pine St', postalCode: '98765', city: 'Bigcity', membershipType: 'Junior', memberSince: '2022-04-10' },
-    { id: 5, firstName: 'Charlie', lastName: 'Davis', email: 'charlie@example.com', phoneNumber: '444-555-6666', address: '654 Maple St', postalCode: '45678', city: 'Middletown', membershipType: 'Full', memberSince: '2022-05-05' },
-    { id: 6, firstName: 'Diana', lastName: 'Evans', email: 'diana@example.com', phoneNumber: '777-888-9999', address: '876 Birch St', postalCode: '34567', city: 'Villagetown', membershipType: 'Junior', memberSince: '2022-06-15' },
-    { id: 7, firstName: 'Ethan', lastName: 'Foster', email: 'ethan@example.com', phoneNumber: '222-333-4444', address: '987 Cedar St', postalCode: '23456', city: 'Hamlet', membershipType: 'Full', memberSince: '2022-07-25' },
-    { id: 8, firstName: 'Fiona', lastName: 'Garcia', email: 'fiona@example.com', phoneNumber: '666-777-8888', address: '543 Walnut St', postalCode: '10987', city: 'Townsville', membershipType: 'Junior', memberSince: '2022-08-30' },
-    { id: 9, firstName: 'George', lastName: 'Harris', email: 'george@example.com', phoneNumber: '999-000-1111', address: '765 Redwood St', postalCode: '87654', city: 'Metropolis', membershipType: 'Full', memberSince: '2022-09-05' },
-    { id: 10, firstName: 'Hannah', lastName: 'Jackson', email: 'hannah@example.com', phoneNumber: '333-444-5555', address: '432 Spruce St', postalCode: '76543', city: 'Countryside', membershipType: 'Junior', memberSince: '2022-10-10' },
-    { id: 11, firstName: 'Ian', lastName: 'King', email: 'ian@example.com', phoneNumber: '888-999-0000', address: '678 Fir St', postalCode: '65432', city: 'Suburbia', membershipType: 'Full', memberSince: '2022-11-15' },
-    { id: 12, firstName: 'Jasmine', lastName: 'Lee', email: 'jasmine@example.com', phoneNumber: '123-456-7890', address: '567 Maple Ave', postalCode: '54321', city: 'Hometown', membershipType: 'Junior', memberSince: '2022-12-20' },
-    { id: 13, firstName: 'Kyle', lastName: 'Martin', email: 'kyle@example.com', phoneNumber: '555-666-7777', address: '890 Birch St', postalCode: '43210', city: 'Villagetown', membershipType: 'Full', memberSince: '2023-01-25' },
-    { id: 14, firstName: 'Liam', lastName: 'Nguyen', email: 'liam@example.com', phoneNumber: '987-654-3210', address: '234 Elm Ave', postalCode: '32109', city: 'Cityville', membershipType: 'Junior', memberSince: '2023-02-05' },
-    { id: 15, firstName: 'Mia', lastName: 'Olsen', email: 'mia@example.com', phoneNumber: '444-555-6666', address: '123 Maple St', postalCode: '21098', city: 'Villagetown', membershipType: 'Full', memberSince: '2023-03-10' },
-    { id: 16, firstName: 'Noah', lastName: 'Patel', email: 'noah@example.com', phoneNumber: '777-888-9999', address: '456 Oak Ave', postalCode: '10987', city: 'Townsville', membershipType: 'Junior', memberSince: '2023-04-15' },
-    
-    // Add more dummy data here...
-  ];
+  const [openModal, setOpenModal] = useState(false);
+  const [selectedMember, setSelectedMember] = useState(null);
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState('');
+  const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
-    // In a real application, you would fetch data from an API here
-    setMembers(dummyMembers);
+    const fetchMembers = async () => {
+      const result = await getAllMembers();
+      if (result.success) {
+        setMembers(result.data);
+      } else {
+        console.error(result.error);
+      }
+    };
+    fetchMembers();
   }, []);
+
+  const handleEditClick = (member) => {
+    setSelectedMember(member);
+    setOpenModal(true);
+  };
+
+  const handleModalClose = () => {
+    setOpenModal(false);
+    setSelectedMember(null);
+  };
+
+  const handleSave = (updatedMember) => {
+    setSelectedMember(updatedMember);
+    setConfirmDialogOpen(true);
+  };
+
+  const confirmSave = async () => {
+    try {
+      const result = await updateMember(selectedMember.id, selectedMember);
+      if (result.success) {
+        setSnackbarMessage('Ändringarna sparades framgångsrikt!');
+        const updatedMembers = members.map((member) =>
+          member.id === selectedMember.id ? result.data : member
+        );
+        setMembers(updatedMembers);
+      } else {
+        setSnackbarMessage('Ett fel uppstod vid sparandet av ändringarna.');
+      }
+      setConfirmDialogOpen(false);
+      setOpenModal(false);
+      setSnackbarOpen(true);
+    } catch (error) {
+      console.error('Error updating member:', error);
+      setError('Ett oväntat fel inträffade. Vänligen försök igen.');
+    }
+  };
+
+  const handleSnackbarClose = () => {
+    setSnackbarOpen(false);
+  };
 
   const handleChangePage = (event, newPage) => {
     setPage(newPage);
@@ -59,7 +92,7 @@ const MemberManagement = () => {
   const displayedMembers = filteredMembers.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
 
   return (
-    <Box>
+    <Box sx={{ width: '100%', overflowX: 'auto' }}>
       <Typography variant="h4" gutterBottom>
         Hantera Medlemmar
       </Typography>
@@ -71,10 +104,11 @@ const MemberManagement = () => {
         value={searchTerm}
         onChange={handleSearch}
       />
-      <TableContainer component={Paper}>
+      <TableContainer component={Paper} sx={{ overflowX: 'auto' }}>
         <Table>
           <TableHead>
             <TableRow>
+              <TableCell>ID</TableCell>
               <TableCell>Förnamn</TableCell>
               <TableCell>Efternamn</TableCell>
               <TableCell>Email</TableCell>
@@ -82,25 +116,32 @@ const MemberManagement = () => {
               <TableCell>Adress</TableCell>
               <TableCell>Postnummer</TableCell>
               <TableCell>Stad</TableCell>
-              <TableCell>Medlemstyp</TableCell>
-              <TableCell>Medlem sedan</TableCell>
+              <TableCell>Roll</TableCell>
+              <TableCell>Skapad Datum</TableCell>
+              <TableCell>Uppdaterad Datum</TableCell>
+              <TableCell>Medlemskap Betald Till</TableCell>
+              <TableCell>Aktiv</TableCell>
               <TableCell>Åtgärder</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
             {displayedMembers.map((member) => (
               <TableRow key={member.id}>
+                <TableCell>{member.id}</TableCell>
                 <TableCell>{member.firstName}</TableCell>
                 <TableCell>{member.lastName}</TableCell>
                 <TableCell>{member.email}</TableCell>
-                <TableCell>{member.phoneNumber}</TableCell>
+                <TableCell>{member.phone}</TableCell>
                 <TableCell>{member.address}</TableCell>
                 <TableCell>{member.postalCode}</TableCell>
                 <TableCell>{member.city}</TableCell>
-                <TableCell>{member.membershipType}</TableCell>
-                <TableCell>{member.memberSince}</TableCell>
+                <TableCell>{member.role}</TableCell>
+                <TableCell>{member.dateCreated}</TableCell>
+                <TableCell>{member.dateUpdated || 'N/A'}</TableCell>
+                <TableCell>{member.membershipPaidUntil || 'N/A'}</TableCell>
+                <TableCell>{member.active ? 'Ja' : 'Nej'}</TableCell>
                 <TableCell>
-                  <IconButton aria-label="edit">
+                  <IconButton aria-label="edit" onClick={() => handleEditClick(member)}>
                     <EditIcon />
                   </IconButton>
                   <IconButton aria-label="delete">
@@ -121,6 +162,72 @@ const MemberManagement = () => {
         onPageChange={handleChangePage}
         onRowsPerPageChange={handleChangeRowsPerPage}
       />
+      <Modal open={openModal} onClose={handleModalClose}>
+        <Box
+          sx={{
+            p: 4,
+            bgcolor: 'background.paper',
+            margin: 'auto',
+            mt: 5,
+            maxWidth: { xs: '90%', sm: 500, md: 600, lg: 700 },
+            width: '100%',
+            maxHeight: '80vh',
+            overflowY: 'auto',
+          }}
+        >
+          {selectedMember && (
+            <MemberForm
+              initialData={selectedMember}
+              onSubmit={handleSave}
+              isEditing={true}
+              submitButtonText="Spara ändringar"
+            />
+          )}
+          <Button variant="outlined" color="primary" onClick={handleModalClose} sx={{ mt: 2 }}>
+            Avbryt
+          </Button>
+        </Box>
+      </Modal>
+      <Dialog
+        open={confirmDialogOpen}
+        onClose={() => setConfirmDialogOpen(false)}
+      >
+        <DialogTitle>Bekräfta sparning</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            Är du säker på att du vill spara ändringarna?
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setConfirmDialogOpen(false)} color="primary">
+            Avbryt
+          </Button>
+          <Button onClick={confirmSave} color="primary" autoFocus>
+            Bekräfta
+          </Button>
+        </DialogActions>
+      </Dialog>
+      <Snackbar
+        open={snackbarOpen}
+        autoHideDuration={null}
+        onClose={handleSnackbarClose}
+        anchorOrigin={{ vertical: 'center', horizontal: 'center' }}
+        sx={{ width: '80%', maxWidth: 400 }}
+        action={
+          <Box sx={{ display: 'flex', justifyContent: 'center' }}>
+            <Button color="secondary" size="small" onClick={confirmSave}>
+              BEKRÄFTA
+            </Button>
+            <Button color="secondary" size="small" onClick={handleSnackbarClose}>
+              AVBRYT
+            </Button>
+          </Box>
+        }
+      >
+        <Alert onClose={handleSnackbarClose} severity="info" sx={{ width: '100%' }}>
+          {snackbarMessage}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 };

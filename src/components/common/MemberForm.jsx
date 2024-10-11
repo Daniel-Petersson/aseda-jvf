@@ -1,7 +1,9 @@
-import React, { useState, useEffect } from 'react';
-import { TextField, Button, Grid, Box, Typography } from '@mui/material';
+import React, { useState, useEffect, useContext } from 'react';
+import { TextField, Button, Grid, Box, Typography, Select, MenuItem } from '@mui/material';
+import { AuthContext } from '../../utils/AuthContext'; // Importera AuthContext
 
 const MemberForm = ({ onSubmit, initialData, isEditing, submitButtonText }) => {
+  const { user } = useContext(AuthContext); // Använd AuthContext
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -12,18 +14,17 @@ const MemberForm = ({ onSubmit, initialData, isEditing, submitButtonText }) => {
     email: '',
     password: '',
     confirmPassword: '',
+    role: '',
+    dateCreated: '',
+    dateUpdated: '',
+    membershipPaidUntil: '',
+    active: false,
   });
 
   useEffect(() => {
     if (initialData) {
       setFormData({
-        firstName: initialData.firstName || '',
-        lastName: initialData.lastName || '',
-        address: initialData.address || '',
-        postalCode: initialData.postalCode || '',
-        city: initialData.city || '',
-        phone: initialData.phone || '',
-        email: initialData.email || '',
+        ...initialData,
         password: '',
         confirmPassword: '',
       });
@@ -31,10 +32,10 @@ const MemberForm = ({ onSubmit, initialData, isEditing, submitButtonText }) => {
   }, [initialData]);
 
   const handleChange = (event) => {
-    const { name, value } = event.target;
+    const { name, type, checked, value } = event.target;
     setFormData(prevData => ({
       ...prevData,
-      [name]: value
+      [name]: type === 'checkbox' ? checked : value
     }));
   };
 
@@ -46,7 +47,7 @@ const MemberForm = ({ onSubmit, initialData, isEditing, submitButtonText }) => {
   return (
     <Box component="form" noValidate onSubmit={handleSubmit}>
       <Grid container spacing={2}>
-        {[ 
+        {[
           { name: "firstName", label: "Förnamn", autoComplete: "given-name" },
           { name: "lastName", label: "Efternamn", autoComplete: "family-name" },
           { name: "address", label: "Adress", autoComplete: "street-address" },
@@ -54,22 +55,43 @@ const MemberForm = ({ onSubmit, initialData, isEditing, submitButtonText }) => {
           { name: "city", label: "Postort", autoComplete: "address-level2" },
           { name: "phone", label: "Telefon", autoComplete: "tel" },
           { name: "email", label: "E-post", type: "email", autoComplete: "username" },
+          ...(user.role === 'ADMIN' ? [
+            { name: "role", label: "Roll", autoComplete: "role" },
+            { name: "dateCreated", label: "Skapad Datum", type: "date" },
+            { name: "dateUpdated", label: "Uppdaterad Datum", type: "date" },
+            { name: "membershipPaidUntil", label: "Medlemskap Betald Till", type: "date" },
+            { name: "active", label: "Aktiv", type: "checkbox" },
+          ] : []),
           { name: "password", label: "Lösenord", type: "password", autoComplete: "new-password" },
           { name: "confirmPassword", label: "Bekräfta lösenord", type: "password", autoComplete: "new-password" },
         ].map((field) => (
           <Grid item xs={12} sm={field.name === "postalCode" || field.name === "city" ? 6 : 12} key={field.name}>
-            <TextField
-              name={field.name}
-              label={field.label}
-              variant="outlined"
-              fullWidth
-              required={field.name !== "phone"}
-              type={field.type || "text"}
-              value={formData[field.name]}
-              onChange={handleChange}
-              disabled={!isEditing}
-              autoComplete={field.autoComplete}
-            />
+            {field.name === "role" ? (
+              <Select
+                name="role"
+                value={formData.role}
+                onChange={handleChange}
+                fullWidth
+                variant="outlined"
+              >
+                <MenuItem value="ADMIN">ADMIN</MenuItem>
+                <MenuItem value="INSTRUCTOR">INSTRUCTOR</MenuItem>
+                <MenuItem value="USER">USER</MenuItem>
+              </Select>
+            ) : (
+              <TextField
+                name={field.name}
+                label={field.label}
+                variant="outlined"
+                fullWidth
+                required={field.name !== "phone"}
+                type={field.type || "text"}
+                value={formData[field.name]}
+                onChange={handleChange}
+                disabled={!isEditing}
+                autoComplete={field.autoComplete}
+              />
+            )}
           </Grid>
         ))}
       </Grid>

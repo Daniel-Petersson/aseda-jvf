@@ -14,7 +14,7 @@ const theme = createTheme({
       paper: '#F0F0F0', // Slightly darker gray for cards and other paper elements
     },
     text: {
-      primary: '#F8F8F8', // White text on green surfaces
+      primary: '#5D6651', // Green text for body content
       secondary: '#D4A15E', // Gold for certain accents
     },
   },
@@ -114,42 +114,6 @@ const theme = createTheme({
           color: '#D4A15E', // Gold text for pagination buttons
           '&.Mui-selected': {
             backgroundColor: '#D4A15E', // Gold background for selected page
-            color: '#5D6651', // Green text for selected page
-            '&:hover': {
-              backgroundColor: '#D4A15E', // Keep gold background on hover for selected page
-            },
-          },
-          '&:hover': {
-            backgroundColor: 'rgba(212, 161, 94, 0.2)', // Light gold background on hover
-          },
-        },
-      },
-    },
-    MuiTableCell: {
-      styleOverrides: {
-        root: {
-          color: '#5D6651', // Green text for table content
-        },
-        head: {
-          fontWeight: 700,
-          backgroundColor: '#5D6651',
-          color: '#F8F8F8', // White text for table headers
-        },
-      },
-    },
-    MuiTablePagination: {
-      styleOverrides: {
-        root: {
-          color: '#5D6651', // Green text for pagination
-        },
-      },
-    },
-    MuiTableSortLabel: {
-      styleOverrides: {
-        root: {
-          color: '#F8F8F8', // White text for sortable column headers
-          '&:hover': {
-            color: '#D4A15E', // Gold color on hover
           },
           '&.Mui-active': {
             color: '#D4A15E', // Gold color for active sort
@@ -217,15 +181,25 @@ const theme = createTheme({
     MuiIconButton: {
       styleOverrides: {
         root: {
-          color: '#F8F8F8', // White color for icon buttons
+          color: '#5D6651', // Green color for icon buttons to match table text
           '&:hover': {
             backgroundColor: 'rgba(212, 161, 94, 0.2)', // Light gold background on hover
           },
         },
       },
     },
+    MuiIcon: {
+      styleOverrides: {
+        root: {
+          color: '#5D6651', // Green color for icons to match table text
+        },
+      },
+    },
     MuiSelect: {
       styleOverrides: {
+        root: {
+          color: '#5D6651', // Green text for select input
+        },
         icon: {
           color: '#5D6651', // Green color for select icon
         },

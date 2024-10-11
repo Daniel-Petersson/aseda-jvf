@@ -12,28 +12,23 @@ const steps = ['Förberedelser & Utbildning', 'Teoriprovet', 'Praktiska Provet -
 
 const JagarExamen = () => {
   const [expandedCard, setExpandedCard] = useState(null);
-  const [activeStep, setActiveStep] = useState(0);
 
-  const handleExpandClick = (cardIndex) => {
-    setExpandedCard(expandedCard === cardIndex ? null : cardIndex);
-    setActiveStep(cardIndex);
+  const handleExpandClick = (id) => {
+    setExpandedCard(expandedCard === id ? null : id);
   };
 
   return (
     <ThemeProvider theme={theme}>
-      <Box sx={{ backgroundColor: 'background.default', minHeight: '100vh', paddingY: 4 }}>
-        <Container>
-          <Box mt={4}>
-            <Stepper activeStep={activeStep} alternativeLabel>
-              {steps.map((label) => (
-                <Step key={label}>
-                  <StepLabel>{label}</StepLabel>
-                </Step>
-              ))}
-            </Stepper>
-          </Box>
-
-          <Grid container spacing={4} sx={{ marginTop: '20px', marginBottom: '20px' }}>
+      <Container maxWidth="lg">
+        <Box sx={{ py: 8 }}>
+          <Stepper activeStep={-1} alternativeLabel>
+            {steps.map((label) => (
+              <Step key={label}>
+                <StepLabel>{label}</StepLabel>
+              </Step>
+            ))}
+          </Stepper>
+          <Grid container spacing={4} mt={4}>
             {/* Card 1: Förberedelser & Utbildning */}
             <Grid item xs={12} sm={6} md={4}>
               <Card>
@@ -43,20 +38,16 @@ const JagarExamen = () => {
                 />
                 <CardContent>
                   <Typography variant="body2">
-                    Välj mellan studiecirkel eller intensivkurs för att förbereda dig för jägarexamen.
+                    Förbered dig med rätt utbildning och material för att klara jägarexamen.
                   </Typography>
                   <Collapse in={expandedCard === 0}>
-                    <Typography variant="body2" sx={{ marginTop: '10px' }}>
-                      Svenska Jägareförbundet samarbetar med Studiefrämjandet. Det finns även möjlighet till en intensivutbildning med teori i förväg, följt av några dagar med praktisk utbildning och god mat. Titta in på välrenommerade <a href="https://www.asaherrgard.se/" target="_blank" rel="noopener noreferrer">Asa Herrgård</a>
+                    <Typography variant="body2" style={{ marginTop: '10px' }}>
+                      Det är viktigt att ha en god förståelse för jaktlagar, säkerhet och viltvård.
                     </Typography>
                   </Collapse>
                 </CardContent>
                 <CardActions>
-                  <Button 
-                    size="small" 
-                    variant="cardButton" 
-                    onClick={() => handleExpandClick(0)}
-                  >
+                  <Button size="small" color="primary" variant="cardButton" onClick={() => handleExpandClick(0)}>
                     {expandedCard === 0 ? 'Visa mindre' : 'Läs mer'}
                   </Button>
                 </CardActions>
@@ -125,7 +116,7 @@ const JagarExamen = () => {
                     Testa din förmåga att hantera hagelgevär, avståndsbedömning och skjutning mot markmål.
                   </Typography>
                   <Collapse in={expandedCard === 3}>
-                    <Typography variant="body2"  style={{ marginTop: '10px' }}>
+                    <Typography variant="body2" style={{ marginTop: '10px' }}>
                       Förmågan att bedöma avstånd, träffa lerduvor och markmål prövas. Minst fyra av sex lerduvor måste träffas och avståndsbedömningen måste vara korrekt.
                     </Typography>
                   </Collapse>
@@ -175,7 +166,7 @@ const JagarExamen = () => {
                     Få en överblick över kostnaderna för att ta jägarexamen.
                   </Typography>
                   <Collapse in={expandedCard === 5}>
-                    <Typography variant="body2"  style={{ marginTop: '10px' }}>
+                    <Typography variant="body2" style={{ marginTop: '10px' }}>
                       <ul>
                         <li>Teoretiskt Prov: 500 kr</li>
                         <li>Grundprov Kulgevär: 200 kr</li>
@@ -195,8 +186,8 @@ const JagarExamen = () => {
               </Card>
             </Grid>
           </Grid>
-        </Container>
-      </Box>
+        </Box>
+      </Container>
     </ThemeProvider>
   );
 };

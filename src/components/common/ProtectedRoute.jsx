@@ -1,17 +1,22 @@
-import React from 'react';
+import React, { useContext } from 'react';
 import { Navigate } from 'react-router-dom';
-import { hasRole, isAuthenticated } from '../../utils/authUtils';
+import { AuthContext } from '../../utils/AuthContext';
 
-const ProtectedRoute = ({ element: Element, allowedRoles, fallback = <Navigate to="/login" replace /> }) => {
-  if (!isAuthenticated()) {
-    return fallback;
+const ProtectedRoute = ({ element, roles }) => {
+  const { user } = useContext(AuthContext);
+
+  if (!user) {
+    // Not logged in, redirect to login page
+    return <Navigate to="/login" />;
   }
 
-  if (!hasRole(allowedRoles)) {
-    return <Navigate to="/" replace />;
+  if (roles && roles.indexOf(user.role) === -1) {
+    // Role not authorized, redirect to home page or unauthorized page
+    return <Navigate to="/" />;
   }
 
-  return <Element />;
+  // Authorized, render the component
+  return element;
 };
 
 export default ProtectedRoute;

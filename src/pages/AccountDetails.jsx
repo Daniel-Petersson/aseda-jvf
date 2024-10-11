@@ -1,12 +1,11 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { useCookies } from 'react-cookie';
-import { jwtDecode } from 'jwt-decode';
+import React, { useState, useEffect, useCallback, useContext } from 'react';
 import { Box, Typography, CircularProgress, Paper, Alert, Button } from '@mui/material';
 import MemberForm from '../components/common/MemberForm';
 import { getMember, updateMember } from '../services/MemberService';
+import { AuthContext } from '../utils/AuthContext'; // Import AuthContext
 
 const AccountDetails = () => {
-  const [cookies] = useCookies(['token']);
+  const { user } = useContext(AuthContext); // Use AuthContext
   const [userData, setUserData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -14,10 +13,9 @@ const AccountDetails = () => {
   const [isEditing, setIsEditing] = useState(false);
 
   const fetchUserData = useCallback(async () => {
-    if (cookies.token) {
+    if (user) {
       try {
-        const decodedToken = jwtDecode(cookies.token);
-        const memberId = decodedToken.userId;
+        const memberId = user.memberId;
         const result = await getMember(memberId);
         if (result.success) {
           setUserData(result.data);
@@ -33,7 +31,7 @@ const AccountDetails = () => {
       setError('No authentication token found. Please log in.');
       setLoading(false);
     }
-  }, [cookies.token]);
+  }, [user]);
 
   useEffect(() => {
     fetchUserData();

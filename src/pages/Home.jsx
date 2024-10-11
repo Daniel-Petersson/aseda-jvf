@@ -6,7 +6,7 @@ const Home = () => {
     <Container maxWidth="lg">
       <Box sx={{ display: 'flex', alignItems: 'center', py: 8 }}>
         <Grid container spacing={4}>
-          <Grid item xs={12} md={6}>
+          <Grid item xs={12} sm={12} md={6} lg={6} xl={6}>
             <Box
               sx={{
                 height: '400px',
@@ -28,7 +28,7 @@ const Home = () => {
               />
             </Box>
           </Grid>
-          <Grid item xs={12} md={6}>
+          <Grid item xs={12} sm={12} md={6} lg={6} xl={6}>
             <Typography variant="h2" component="h1" gutterBottom>
               Välkommen till Åseda Jaktvårdsförening
             </Typography>

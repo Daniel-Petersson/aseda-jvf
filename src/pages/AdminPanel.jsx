@@ -1,37 +1,23 @@
-import React, { useState, useEffect } from 'react';
-import { Container, Typography, Box, Tabs, Tab, Grid } from '@mui/material';
+import React, { useState, useContext } from 'react';
+import { Container, Box, Tabs, Tab, Grid } from '@mui/material';
 import MemberManagement from '../components/admin/MemberManagement';
 import NewsManagement from '../components/admin/NewsManagement';
 import ShootingSession from '../components/common/ShootingSession';
-import { jwtDecode } from 'jwt-decode';
-import { useCookies } from 'react-cookie';
+import { AuthContext } from '../utils/AuthContext'; // Import AuthContext
 
 const AdminPanel = () => {
   const [value, setValue] = useState(0);
-  const [userRole, setUserRole] = useState('');
-  const [cookies] = useCookies(['token']);
-
-  useEffect(() => {
-    if (cookies.token) {
-      try {
-        const decodedToken = jwtDecode(cookies.token);
-        setUserRole(decodedToken.role || 'member');
-      } catch (error) {
-        console.error('Error decoding token:', error);
-        setUserRole('member');
-      }
-    }
-  }, [cookies.token]);
+  const { user } = useContext(AuthContext); // Use AuthContext
 
   const handleChange = (event, newValue) => {
     setValue(newValue);
   };
 
-  const isAdmin = userRole === 'ADMIN';
-  const isInstructor = userRole === 'INSTRUCTOR';
+  const isAdmin = user?.role === 'ADMIN';
+  const isInstructor = user?.role === 'INSTRUCTOR';
 
   return (
-    <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
+    <Container maxWidth="lg" sx={{ mt: 4, mb: 4, width: '100%', overflowX: 'auto' }}>
       <Grid container justifyContent="center">
         <Grid item xs={12} md={10} lg={8}>
           <Box sx={{ 

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { 
   Container, 
   Box, 
@@ -10,24 +10,15 @@ import {
   Alert // Lägg till denna import
 } from '@mui/material';
 import { Link as RouterLink, useNavigate } from 'react-router-dom'; // Lägg till useNavigate
-import { useCookies } from 'react-cookie'; // Lägg till denna import
+import { AuthContext } from '../utils/AuthContext'; // Import AuthContext
 import { authenticateMember } from '../services/MemberService'; // Importera loginMember funktion
 
 function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState(''); // Lägg till error state
-  const [cookies, setCookie] = useCookies(['token']);
   const navigate = useNavigate(); // Använd useNavigate hook
-
-  useEffect(() => {
-    // Check if the token cookie exists when the component mounts
-    if (cookies.token) {
-      console.log('Existing token found:', cookies.token);
-    } else {
-      console.log('No existing token found');
-    }
-  }, [cookies.token]);
+  const { login } = useContext(AuthContext); // Use AuthContext
 
   const handleSubmit = async (event) => {
     event.preventDefault();
@@ -35,12 +26,7 @@ function Login() {
       const result = await authenticateMember({ email, password });
       const token = result.data; 
       if (token) {
-        setCookie('token', token, { 
-          path: '/', 
-          maxAge: 3600, 
-          sameSite: 'strict', 
-          secure: process.env.NODE_ENV === 'production'
-        });
+        login(token); // Use login method from AuthContext
         navigate('/member');
       } else {
         console.error('Authentication failed or token is missing:', result);

@@ -1,4 +1,5 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Layout from './components/layout/Layout';
 import Home from './pages/Home';
 import Booking from './pages/Booking';
@@ -18,62 +19,35 @@ import ShootingSession from './components/common/ShootingSession';
 import ProtectedRoute from './components/common/ProtectedRoute';
 import NewsManagement from './components/admin/NewsManagement';
 import MemberManagement from './components/admin/MemberManagement';
+import { AuthProvider } from './utils/AuthContext';
 
 function App() {
   return (
-    <Router>
-      <Routes>
-        <Route path="/" element={<Layout />}>
-          <Route index element={<Home />} />
-          <Route path="booking" element={<Booking />} />
-          <Route path="login" element={<Login />} />
-          <Route path="register" element={<Register />} />
-          <Route path="algbana" element={<Algbana />} />
-          <Route path="inskjutning" element={<Inskjutning />} />
-          <Route path="viltmalsbana" element={<Viltmalsbana />} />
-          <Route path="trappSkeet" element={<TrappSkeet />} />
-          <Route path="jagarExamen" element={<JagarExamen />} />
-          <Route path="calendar" element={<Calendar />} />
-          <Route path="news" element={<NewsPage />} />
-          <Route path="accountDetails" element={<AccountDetails />} />
-          <Route path="member" element={<MemberArea />} />
-          
-          {/* Admin routes */}
-          <Route path="admin" element={
-            <ProtectedRoute 
-              element={AdminPanel} 
-              allowedRoles={['ADMIN', 'INSTRUCTOR']} 
-            />
-          } />
-          <Route path="admin/news" element={
-            <ProtectedRoute 
-              element={NewsManagement} 
-              allowedRoles={['ADMIN']} 
-            />
-          } />
-          <Route path="admin/members" element={
-            <ProtectedRoute 
-              element={MemberManagement} 
-              allowedRoles={['ADMIN']} 
-            />
-          } />
-          
-          {/* Admin and Instructor routes */}
-          <Route path="admin/shooting-session" element={
-            <ProtectedRoute 
-              element={ShootingSession} 
-              allowedRoles={['ADMIN', 'INSTRUCTOR']} 
-            />
-          } />
-          <Route path="admin/sessions" element={
-            <ProtectedRoute 
-              element={ShootingSession} 
-              allowedRoles={['ADMIN', 'INSTRUCTOR']} 
-            />
-          } />
-        </Route>
-      </Routes>
-    </Router>
+    <AuthProvider>
+      <Router>
+        <Layout>
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
+            <Route path="/accountDetails" element={<ProtectedRoute roles={['USER', 'ADMIN', 'INSTRUCTOR']} element={<AccountDetails />} />} />
+            <Route path="/admin" element={<ProtectedRoute roles={['ADMIN']} element={<AdminPanel />} />} />
+            <Route path="/member" element={<ProtectedRoute roles={['USER', 'ADMIN', 'INSTRUCTOR']} element={<MemberArea />} />} />
+            <Route path="/booking" element={<Booking />} />
+            <Route path="/algbana" element={<Algbana />} />
+            <Route path="/inskjutning" element={<Inskjutning />} />
+            <Route path="/viltmalsbana" element={<Viltmalsbana />} />
+            <Route path="/trappSkeet" element={<TrappSkeet />} />
+            <Route path="/jagarExamen" element={<JagarExamen />} />
+            <Route path="/calendar" element={<Calendar />} />
+            <Route path="/news" element={<NewsPage />} />
+            <Route path="/shootingSession" element={<ProtectedRoute roles={['ADMIN', 'INSTRUCTOR']} element={<ShootingSession />} />} />
+            <Route path="/newsManagement" element={<ProtectedRoute roles={['ADMIN']} element={<NewsManagement />} />} />
+            <Route path="/memberManagement" element={<ProtectedRoute roles={['ADMIN']} element={<MemberManagement />} />} />
+          </Routes>
+        </Layout>
+      </Router>
+    </AuthProvider>
   );
 }
 

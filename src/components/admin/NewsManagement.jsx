@@ -1,108 +1,177 @@
-import React, { useState, useEffect } from 'react';
-import { Box, Typography, Button, TextField, Select, MenuItem, FormControl, InputLabel } from '@mui/material';
-import ReactQuill from 'react-quill';
-import 'react-quill/dist/quill.snow.css';
+import React, { useState, useContext, useEffect } from 'react';
+import { Box, Typography, TextField, Button, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, IconButton, Modal } from '@mui/material';
+import { AuthContext } from '../../utils/AuthContext';
+import { getAllNews, createNews, updateNews, deleteNews } from '../../services/NewsService';
+import EditIcon from '@mui/icons-material/Edit';
+import DeleteIcon from '@mui/icons-material/Delete';
 
 const NewsManagement = () => {
-  const [posts, setPosts] = useState([]);
+  const { user } = useContext(AuthContext);
+  const isAuthenticated = user && user.role === 'ADMIN';
+  const [newsList, setNewsList] = useState([]);
   const [currentPost, setCurrentPost] = useState({
     title: '',
-    category: '',
-    shortDescription: '',
     content: '',
-    image: null
+    authorId: user ? user.memberId : '',
+    pictureUrl: '',
+    fileUrl: ''
   });
+  const [isEditing, setIsEditing] = useState(false);
+  const [modalOpen, setModalOpen] = useState(false);
 
   useEffect(() => {
-    // Fetch posts from API
-    fetchPosts();
+    const fetchNews = async () => {
+      const result = await getAllNews();
+      if (result.success) {
+        setNewsList(result.data);
+      }
+    };
+    fetchNews();
   }, []);
 
-  const fetchPosts = async () => {
-    // TODO: Implement API call to fetch posts
-    // const response = await fetch('/api/posts');
-    // const data = await response.json();
-    // setPosts(data);
+  const handleInputChange = (event) => {
+    const { name, value } = event.target;
+    setCurrentPost((prevPost) => ({
+      ...prevPost,
+      [name]: value,
+    }));
   };
 
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setCurrentPost(prev => ({ ...prev, [name]: value }));
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    const postData = { ...currentPost, authorId: user.memberId };
+    console.log('Data being sent:', postData);
+    if (isEditing) {
+      await updateNews(currentPost.id, postData);
+    } else {
+      await createNews(postData);
+    }
+    const result = await getAllNews();
+    if (result.success) {
+      setNewsList(result.data);
+    }
+    setCurrentPost({
+      title: '',
+      content: '',
+      authorId: user ? user.memberId : '',
+      pictureUrl: '',
+      fileUrl: ''
+    });
+    setIsEditing(false);
+    setModalOpen(false);
   };
 
-  const handleEditorChange = (content) => {
-    setCurrentPost(prev => ({ ...prev, content }));
+  const handleEdit = (newsItem) => {
+    setCurrentPost(newsItem);
+    setIsEditing(true);
+    setModalOpen(true);
   };
 
-  const handleImageUpload = (e) => {
-    const file = e.target.files[0];
-    setCurrentPost(prev => ({ ...prev, image: file }));
+  const handleDelete = async (newsId) => {
+    await deleteNews(newsId);
+    const result = await getAllNews();
+    if (result.success) {
+      setNewsList(result.data);
+    }
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    // TODO: Implement API call to create/update post
-    // const response = await fetch('/api/posts', {
-    //   method: 'POST',
-    //   body: JSON.stringify(currentPost),
-    //   headers: { 'Content-Type': 'application/json' }
-    // });
-    // if (response.ok) {
-    //   fetchPosts();
-    //   setCurrentPost({ title: '', category: '', shortDescription: '', content: '', image: null });
-    // }
-  };
+  if (!isAuthenticated) {
+    return <Typography variant="h6">Access Denied</Typography>;
+  }
 
   return (
     <Box>
       <Typography variant="h4" gutterBottom>
         Hantera Nyhetsinlägg
       </Typography>
-      <form onSubmit={handleSubmit}>
-        <TextField
-          fullWidth
-          margin="normal"
-          name="title"
-          label="Titel"
-          value={currentPost.title}
-          onChange={handleInputChange}
-        />
-        <FormControl fullWidth margin="normal">
-          <InputLabel>Kategori</InputLabel>
-          <Select
-            name="category"
-            value={currentPost.category}
-            onChange={handleInputChange}
-          >
-            <MenuItem value="news">Nyheter</MenuItem>
-            <MenuItem value="openinghours">Öppettider</MenuItem>
-          </Select>
-        </FormControl>
-        <TextField
-          fullWidth
-          margin="normal"
-          name="shortDescription"
-          label="Kort beskrivning"
-          multiline
-          rows={2}
-          value={currentPost.shortDescription}
-          onChange={handleInputChange}
-        />
-        <ReactQuill
-          theme="snow"
-          value={currentPost.content}
-          onChange={handleEditorChange}
-        />
-        <input
-          accept="image/*"
-          type="file"
-          onChange={handleImageUpload}
-        />
-        <Button type="submit" variant="contained" color="primary" sx={{ mt: 2 }}>
-          Publicera
-        </Button>
-      </form>
-      {/* TODO: Add list of existing posts with edit and delete options */}
+      <Button variant="contained" color="primary" onClick={() => setModalOpen(true)} sx={{ mb: 2 }}>
+        Skapa Ny Nyhet
+      </Button>
+      <Modal open={modalOpen} onClose={() => setModalOpen(false)}>
+        <Box sx={{ p: 4, bgcolor: 'background.paper', margin: 'auto', mt: 5, maxWidth: 500 }}>
+          <form onSubmit={handleSubmit}>
+            <TextField
+              fullWidth
+              margin="normal"
+              name="title"
+              label="Titel"
+              value={currentPost.title}
+              onChange={handleInputChange}
+            />
+            <TextField
+              fullWidth
+              margin="normal"
+              name="content"
+              label="Innehåll"
+              multiline
+              rows={4}
+              value={currentPost.content}
+              onChange={handleInputChange}
+            />
+            <TextField
+              fullWidth
+              margin="normal"
+              name="pictureUrl"
+              label="Bild URL"
+              value={currentPost.pictureUrl}
+              onChange={handleInputChange}
+            />
+            <TextField
+              fullWidth
+              margin="normal"
+              name="fileUrl"
+              label="Fil URL"
+              value={currentPost.fileUrl}
+              onChange={handleInputChange}
+            />
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 2 }}>
+              <Button type="submit" variant="contained" color="primary">
+                {isEditing ? 'Uppdatera' : 'Publicera'}
+              </Button>
+              <Button variant="outlined" color="primary" onClick={() => setModalOpen(false)}>
+                Avbryt
+              </Button>
+            </Box>
+          </form>
+        </Box>
+      </Modal>
+      <TableContainer component={Paper}>
+        <Table>
+          <TableHead>
+            <TableRow>
+              <TableCell>Titel</TableCell>
+              <TableCell>Innehåll</TableCell>
+              <TableCell>Författare</TableCell>
+              <TableCell>Skapad Datum</TableCell>
+              <TableCell>Ändrad Datum</TableCell>
+              <TableCell>Bild URL</TableCell>
+              <TableCell>Fil URL</TableCell>
+              <TableCell>Åtgärder</TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {newsList.map((newsItem) => (
+              <TableRow key={newsItem.id}>
+                <TableCell>{newsItem.title}</TableCell>
+                <TableCell>{newsItem.content}</TableCell>
+                <TableCell>{newsItem.authorName}</TableCell>
+                <TableCell>{newsItem.dateCreated}</TableCell>
+                <TableCell>{newsItem.dateModified}</TableCell>
+                <TableCell>{newsItem.pictureUrl}</TableCell>
+                <TableCell>{newsItem.fileUrl}</TableCell>
+                <TableCell>
+                  <IconButton onClick={() => handleEdit(newsItem)}>
+                    <EditIcon />
+                  </IconButton>
+                  <IconButton onClick={() => handleDelete(newsItem.id)}>
+                    <DeleteIcon />
+                  </IconButton>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </TableContainer>
     </Box>
   );
 };
