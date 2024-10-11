@@ -55,7 +55,7 @@ const MemberForm = ({ onSubmit, initialData, isEditing, submitButtonText }) => {
           { name: "city", label: "Postort", autoComplete: "address-level2" },
           { name: "phone", label: "Telefon", autoComplete: "tel" },
           { name: "email", label: "E-post", type: "email", autoComplete: "username" },
-          ...(user.role === 'ADMIN' ? [
+          ...(user && user.role === 'ADMIN' ? [
             { name: "role", label: "Roll", autoComplete: "role" },
             { name: "dateCreated", label: "Skapad Datum", type: "date" },
             { name: "dateUpdated", label: "Uppdaterad Datum", type: "date" },

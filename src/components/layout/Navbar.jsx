@@ -1,9 +1,8 @@
 import React, { useContext } from 'react';
 import { AppBar, Toolbar, IconButton, Typography, Menu, MenuItem, Box, Container, Avatar, Tooltip, Link } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
-import AdbIcon from '@mui/icons-material/Adb'; // Import AdbIcon
 import { Link as RouterLink, useNavigate } from 'react-router-dom';
-import { AuthContext } from '../../utils/AuthContext'; // Import AuthContext
+import { AuthContext } from '../../utils/AuthContext';
 import { useTheme } from '@mui/material/styles';
 
 function Navbar() {
@@ -12,7 +11,7 @@ function Navbar() {
   const [anchorElUser, setAnchorElUser] = React.useState(null);
   const [anchorElSkjutbanor, setAnchorElSkjutbanor] = React.useState(null);
   const navigate = useNavigate();
-  const { user, logout } = useContext(AuthContext); // Use AuthContext
+  const { user, logout } = useContext(AuthContext);
 
   const isLoggedIn = !!user;
   const userRole = user?.role || '';
@@ -69,7 +68,7 @@ function Navbar() {
   };
 
   const handleLogout = () => {
-    logout(); // Use logout method from AuthContext
+    logout();
     handleCloseUserMenu();
     navigate('/');
   };
@@ -97,8 +96,9 @@ function Navbar() {
               fontFamily: theme.typography.fontFamily,
               fontWeight: theme.typography.h1.fontWeight,
               letterSpacing: '.3rem',
-              color: theme.palette.text.primary,
+              color: theme.palette.primary.contrastText,
               textDecoration: 'none',
+              fontSize: { xs: '1.25rem', md: '1.5rem' }, // Responsive font size
             }}
           >
             Åseda Jaktvårdsförening
@@ -113,7 +113,7 @@ function Navbar() {
               onClick={handleOpenNavMenu}
               color="inherit"
             >
-              <MenuIcon />
+              <MenuIcon sx={{ color: theme.palette.primary.contrastText }} />
             </IconButton>
             <Menu
               id="menu-appbar"
@@ -153,6 +153,16 @@ function Navbar() {
                       </MenuItem>,
                     ]
               )}
+              {isLoggedIn && settings.map((setting) => (
+                <MenuItem 
+                  key={setting.name} 
+                  onClick={setting.name === 'Logga ut' ? handleLogout : handleCloseNavMenu} 
+                  component={setting.name === 'Logga ut' ? 'button' : RouterLink} 
+                  to={setting.name !== 'Logga ut' ? setting.path : undefined}
+                >
+                  <Typography textAlign="center">{setting.name}</Typography>
+                </MenuItem>
+              ))}
               {!isLoggedIn && (
                 <MenuItem onClick={handleCloseNavMenu}>
                   <Link component={RouterLink} to="/login" sx={linkStyle}>
@@ -162,7 +172,6 @@ function Navbar() {
               )}
             </Menu>
           </Box>
-          <AdbIcon sx={{ display: { xs: 'flex', md: 'none' }, mr: 1 }} />
           <Typography
             variant="h5"
             noWrap
@@ -175,8 +184,9 @@ function Navbar() {
               fontFamily: theme.typography.fontFamily,
               fontWeight: theme.typography.h1.fontWeight,
               letterSpacing: '.3rem',
-              color: 'inherit',
+              color: theme.palette.primary.contrastText,
               textDecoration: 'none',
+              fontSize: { xs: '1.25rem', md: '1.5rem' }, // Responsive font size
             }}
           >
             Åseda Jaktvårdsförening
