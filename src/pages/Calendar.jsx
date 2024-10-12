@@ -210,7 +210,16 @@ const MyCalendar = () => {
   };;
 
   const handleEventClick = (info) => {
-    setSelectedEvent(info.event);
+    setSelectedEvent({
+      ...info.event,
+      extendedProps: {
+        ...info.event.extendedProps,
+        facilityId: info.event.extendedProps.facilityId || '',
+        instructorId: info.event.extendedProps.instructorId || '',
+        assignedLeaderId: info.event.extendedProps.assignedLeaderId || '',
+        seasonal: info.event.extendedProps.seasonal || false
+      }
+    });
     setModalOpen(true);
   };
 
@@ -245,33 +254,33 @@ const MyCalendar = () => {
         case 'booking':
           result = await BookingService.updateBooking(editedEvent.id, {
             title: editedEvent.title,
-            facilityId: editedEvent.extendedProps.facilityId,
-            startTime: editedEvent.start,
-            endTime: editedEvent.end
+            facilityId: editedEvent.facilityId,
+            startTime: editedEvent.startTime,
+            endTime: editedEvent.endTime
           }, cookies.token);
           break;
         case 'openingHours':
           result = await updateOpeningHours(editedEvent.id, {
-            facilityId: editedEvent.extendedProps.facilityId,
-            openingTime: editedEvent.start,
-            closingTime: editedEvent.end,
-            assignedLeaderId: editedEvent.extendedProps.assignedLeaderId
+            facilityId: editedEvent.facilityId,
+            openingTime: editedEvent.startTime,
+            closingTime: editedEvent.endTime,
+            assignedLeaderId: editedEvent.assignedLeaderId
           });
           break;
         case 'facilityAvailability':
           result = await updateAvailability(editedEvent.id, {
-            facilityId: editedEvent.extendedProps.facilityId,
-            startTime: editedEvent.start,
-            endTime: editedEvent.end,
-            seasonal: editedEvent.extendedProps.seasonal
+            facilityId: editedEvent.facilityId,
+            startTime: editedEvent.startTime,
+            endTime: editedEvent.endTime,
+            seasonal: editedEvent.seasonal
           });
           break;
         case 'instructorSchedule':
           result = await updateSchedule(editedEvent.id, {
-            instructorId: editedEvent.extendedProps.instructorId,
-            facilityId: editedEvent.extendedProps.facilityId,
-            startTime: editedEvent.start,
-            endTime: editedEvent.end
+            instructorId: editedEvent.instructorId,
+            facilityId: editedEvent.facilityId,
+            startTime: editedEvent.startTime,
+            endTime: editedEvent.endTime
           });
           break;
         default:
