@@ -27,10 +27,9 @@ const BookingService = {
   createBooking: async (bookingData) => {
     try {
       const response = await axios.post(API_URL, bookingData);
-      return response.data;
+      return { success: true, data: response.data };
     } catch (error) {
-      console.error('Error creating booking:', error);
-      throw error;
+      return handleErrorResponse(error);
     }
   },
 
@@ -41,10 +40,9 @@ const BookingService = {
           Authorization: `Bearer ${token}`
         }
       });
-      return response.data;
+      return { success: true, data: response.data };
     } catch (error) {
-      console.error('Error updating booking:', error);
-      throw error;
+      return handleErrorResponse(error);
     }
   },
 
@@ -59,6 +57,28 @@ const BookingService = {
       console.error('Error deleting booking:', error);
       throw error;
     }
+  }
+};
+
+const handleErrorResponse = (error) => {
+  if (error.response) {
+    return {
+      success: false,
+      error: error.response.data,
+      status: error.response.status
+    };
+  } else if (error.request) {
+    return {
+      success: false,
+      error: 'Ingen respons från servern. Vänligen försök igen senare.',
+      status: null
+    };
+  } else {
+    return {
+      success: false,
+      error: 'Ett oväntat fel inträffade. Vänligen försök igen.',
+      status: null
+    };
   }
 };
 

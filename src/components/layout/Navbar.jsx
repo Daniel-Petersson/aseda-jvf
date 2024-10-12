@@ -5,6 +5,7 @@ import { AuthContext } from '../../utils/AuthContext';
 import { useTheme } from '@mui/material/styles';
 import klovIcon from '../../assets/klov-icon.jpg'; // Import the image
 
+
 function Navbar() {
   const theme = useTheme();
   const [anchorElNav, setAnchorElNav] = React.useState(null);
@@ -96,7 +97,7 @@ function Navbar() {
               fontFamily: theme.typography.fontFamily,
               fontWeight: theme.typography.h1.fontWeight,
               letterSpacing: '.3rem',
-              color: theme.palette.primary.contrastText,
+              color: '#F0EED6',
               textDecoration: 'none',
               fontSize: { xs: '1.25rem', md: '1.5rem' }, // Responsive font size
             }}
@@ -113,7 +114,7 @@ function Navbar() {
               onClick={handleOpenNavMenu}
               color="inherit"
             >
-              <img src={klovIcon} alt="Klov Icon" style={{ width: 24, height: 24 }} /> {/* Use img tag */}
+              <img src={klovIcon} alt="Klov Icon" style={{ width: 24, height: 24, color: '#F0EED6' }} /> {/* Use img tag */}
             </IconButton>
             <Menu
               id="menu-appbar"
@@ -198,7 +199,7 @@ function Navbar() {
                   <Link
                     component="button"
                     onClick={handleOpenSkjutbanorMenu}
-                    sx={{ ...linkStyle, my: 2, color: 'white', display: 'block', mx: 2 }}
+                    sx={{ ...linkStyle, my: 2, color: '#F0EED6', display: 'block', mx: 2 }}
                   >
                     {page.name}
                   </Link>
@@ -232,7 +233,7 @@ function Navbar() {
                   component={RouterLink}
                   to={page.path}
                   onClick={handleCloseNavMenu}
-                  sx={{ ...linkStyle, my: 2, color: 'white', display: 'block', mx: 2 }}
+                  sx={{ ...linkStyle, my: 2, color: '#F0EED6', display: 'block', mx: 2 }}
                 >
                   {page.name}
                 </Link>
@@ -244,7 +245,7 @@ function Navbar() {
               <>
                 <Tooltip title="Open settings">
                   <IconButton onClick={handleOpenUserMenu} sx={{ p: 0 }}>
-                    <img src={klovIcon} alt="Klov Icon" style={{ width: 24, height: 24 }} /> {/* Use img tag */}
+                    <img src={klovIcon} alt="Klov Icon" style={{ width: 24, height: 24, color: '#F0EED6' }} /> {/* Use img tag */}
                   </IconButton>
                 </Tooltip>
                 <Menu
@@ -280,7 +281,7 @@ function Navbar() {
                 component={RouterLink}
                 to="/login"
                 onClick={handleCloseNavMenu}
-                sx={{ ...linkStyle, my: 2, color: 'white', display: 'block' }}
+                sx={{ ...linkStyle, my: 2, color: '#F0EED6', display: 'block' }}
               >
                 Logga in
               </Link>

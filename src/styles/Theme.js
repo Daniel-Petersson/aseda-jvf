@@ -24,6 +24,10 @@ const theme = createTheme({
       fontWeight: 700,
       color: '#D4A15E',
     },
+    h1Home: {
+      fontWeight: 700,
+      color: '#F0EED6',
+    },
     h2: {
       fontWeight: 600,
       color: '#D4A15E',
@@ -46,19 +50,24 @@ const theme = createTheme({
     },
     body1: {
       fontWeight: 400,
-      color: '#5D6651', // Green text for body content
+      color: '#B2A802', // Green text for body content
     },
     body2: {
       fontWeight: 400,
       color: '#5D6651', // Green text for body content
-    }
+    },
+    
+      body3: {
+        fontWeight: 400,
+        color: '#F0EED6',
+      }
   },
   components: {
     MuiAppBar: {
       styleOverrides: {
         root: {
           backgroundColor: '#5D6651', // Green background for header
-          color: '#F8F8F8', // White text
+          color: '#F0EED6', // White text
         },
       },
     },
@@ -66,7 +75,7 @@ const theme = createTheme({
       styleOverrides: {
         root: {
           backgroundColor: '#5D6651', // Green background for footer
-          color: '#F8F8F8', // White text in footer
+          color: '#F0EED6', // White text in footer
         },
       },
     },

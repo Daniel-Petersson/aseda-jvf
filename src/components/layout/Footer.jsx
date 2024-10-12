@@ -19,7 +19,7 @@ const Footer = () => {
             <Typography variant="h6" gutterBottom>
               ÅSEDA JVF
             </Typography>
-            <Typography variant="subtitle1" color="inherit">
+            <Typography variant="subtitle1" color="#F0EED6">
               Grundad 1954
             </Typography>
           </Grid>
@@ -27,10 +27,10 @@ const Footer = () => {
             <Typography variant="h6" gutterBottom>
               Hitta hit
             </Typography>
-            <Typography variant="body2" color="inherit">
+            <Typography variant="body2" color="#F0EED6">
               <LocationOnIcon /> Adress: Exempelgatan 123, 123 45 Exempelstad
             </Typography>
-            <Typography variant="body2" color="inherit">
+            <Typography variant="body2" color="#F0EED6">
               Öppettider: Mån-Fre 09:00 - 17:00
             </Typography>
           </Grid>
@@ -38,20 +38,20 @@ const Footer = () => {
             <Typography variant="h6" gutterBottom>
               Kontaktinfo
             </Typography>
-            <Typography variant="body2" color="inherit">
+            <Typography variant="body2" color="#F0EED6">
               <EmailIcon /> Email: info@asedajvf.com
             </Typography>
-            <Typography variant="body2" color="inherit">
+            <Typography variant="body2" color="#F0EED6">
               <PhoneIcon /> Telefon: 012-345 67 89
             </Typography>
             <Box mt={2}>
-              <Link href="#" color="inherit" sx={{ mr: 2 }}>
+              <Link href="#" color="#F0EED6" sx={{ mr: 2 }}>
                 <FacebookIcon />
               </Link>
-              <Link href="#" color="inherit" sx={{ mr: 2 }}>
+              <Link href="#" color="#F0EED6" sx={{ mr: 2 }}>
                 <TwitterIcon />
               </Link>
-              <Link href="#" color="inherit">
+              <Link href="#" color="#F0EED6">
                 <InstagramIcon />
               </Link>
             </Box>

@@ -57,3 +57,35 @@ export const getAvailabilityByFacility = async (facilityId) => {
         };
     }
 };
+
+export const checkFacilityAvailability = async (facilityId, startTime, endTime) => {
+    try {
+        const response = await axios.get(`${REST_API_FACILITY_AVAILABILITY_URL}check`, {
+            params: { facilityId, startTime, endTime }
+        });
+        return { success: true, data: response.data };
+    } catch (error) {
+        console.error("Error checking facility availability:", error);
+        return { 
+            success: false, 
+            error: error.response?.data?.message || "An error occurred while checking facility availability.",
+            status: error.response?.status || 500
+        };
+    }
+};
+
+export const getAvailableTimeSlots = async (facilityId, startDate, endDate) => {
+    try {
+        const response = await axios.get(`${REST_API_FACILITY_AVAILABILITY_URL}slots`, {
+            params: { facilityId, startDate, endDate }
+        });
+        return { success: true, data: response.data };
+    } catch (error) {
+        console.error("Error fetching available time slots:", error);
+        return { 
+            success: false, 
+            error: error.response?.data?.message || "An error occurred while fetching available time slots.",
+            status: error.response?.status || 500
+        };
+    }
+};

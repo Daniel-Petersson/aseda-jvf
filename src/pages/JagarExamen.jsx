@@ -12,16 +12,23 @@ const steps = ['Förberedelser & Utbildning', 'Teoriprovet', 'Praktiska Provet -
 
 const JagarExamen = () => {
   const [expandedCard, setExpandedCard] = useState(null);
+  const [activeStep, setActiveStep] = useState(-1);
 
   const handleExpandClick = (id) => {
-    setExpandedCard(expandedCard === id ? null : id);
+    if (expandedCard === id) {
+      setExpandedCard(null);
+      setActiveStep(activeStep - 1);
+    } else {
+      setExpandedCard(id);
+      setActiveStep(id);
+    }
   };
 
   return (
     <ThemeProvider theme={theme}>
       <Container maxWidth="lg">
         <Box sx={{ py: 8 }}>
-          <Stepper activeStep={-1} alternativeLabel>
+          <Stepper activeStep={activeStep} alternativeLabel>
             {steps.map((label) => (
               <Step key={label}>
                 <StepLabel>{label}</StepLabel>
@@ -43,6 +50,12 @@ const JagarExamen = () => {
                   <Collapse in={expandedCard === 0}>
                     <Typography variant="body2" style={{ marginTop: '10px' }}>
                       Det är viktigt att ha en god förståelse för jaktlagar, säkerhet och viltvård.
+
+                      <Typography variant="subtitle1" sx={{ mt: 2, fontWeight: 'bold' }}>Studiecirkel</Typography>
+                      För den som vill gå en studiecirkel samarbetar Svenska jägareförbundet med studiefrämjandet.
+
+                      <Typography variant="subtitle1" sx={{ mt: 2, fontWeight: 'bold' }}>Kortkurs</Typography>
+                      Har du inte tid att gå en hel studiecirkel finns möjligheten till intensivutbildning där du läser in teorin i förväg och får några dygn med god mat och proffsig utbildning av duktiga skytteinstruktörer. Titta in på välrenommerade <a href="https://asaherrgard.se" target="_blank" rel="noopener noreferrer">Åsa Herrgård</a>.
                     </Typography>
                   </Collapse>
                 </CardContent>
