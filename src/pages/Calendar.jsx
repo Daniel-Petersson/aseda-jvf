@@ -14,6 +14,7 @@ import { getAllFacilities } from '../services/FacilityService';
 import { getAllMembers } from '../services/MemberService';
 import { createAvailability, updateAvailability, deleteAvailability, getAvailabilityByFacility } from '../services/FacilityAvailabilityService';
 import { createSchedule, updateSchedule, deleteSchedule, getAllSchedules } from '../services/InstructorScheduleService';
+import EventDetailsModal from '../components/common/EventDetailsModal';
 
 const MyCalendar = () => {
   const theme = useTheme();
@@ -38,22 +39,38 @@ const MyCalendar = () => {
   const [selectedFacilityAvailability, setSelectedFacilityAvailability] = useState({ facilityId: '', startTime: '', endTime: '', seasonal: false });
   const [instructorScheduleDialogOpen, setInstructorScheduleDialogOpen] = useState(false);
   const [selectedInstructorSchedule, setSelectedInstructorSchedule] = useState({ instructorId: '', facilityId: '', startTime: '', endTime: '' });
-  useEffect(() => {
-    fetchBookings();
-    fetchFacilities();
-    fetchOpeningHours();
-    fetchMembers();
-    fetchFacilityAvailability();
-    fetchInstructorSchedules();
-  }, []);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [selectedEvent, setSelectedEvent] = useState(null);
 
+  const handleClose = () => {
+    setModalOpen(false);
+    setSelectedEvent(null);
+  };
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        await fetchFacilities();
+        await fetchMembers();
+        await fetchBookings();
+        await fetchOpeningHours();
+        await fetchFacilityAvailability();
+        await fetchInstructorSchedules();
+      } catch (error) {
+        console.error('Error fetching data:', error);
+        showSnackbar('Ett fel uppstod vid hämtning av data. Vänligen försök igen.', 'error');
+      }
+    };
+
+    fetchData();
+  }, []);
 
   const fetchBookings = async () => {
     try {
       const bookings = await BookingService.getAllBookings();
       const formattedBookings = bookings.map(booking => ({
         id: booking.id,
-        title: booking.title,
+        title: `Bokning: ${booking.title} - ${facilities.find(f => f.id === booking.facilityId)?.name || 'Okänd anläggning'}`,
         start: booking.startTime,
         end: booking.endTime,
         type: 'booking',
@@ -65,8 +82,9 @@ const MyCalendar = () => {
       setEvents(prevEvents => [...prevEvents.filter(e => e.type !== 'booking'), ...formattedBookings]);
     } catch (error) {
       console.error('Failed to fetch bookings:', error);
+      showSnackbar('Ett fel uppstod vid hämtning av bokningar. Vänligen försök igen.', 'error');
     }
-  };
+  }
 
   const fetchOpeningHours = async () => {
     try {
@@ -76,7 +94,7 @@ const MyCalendar = () => {
           const facility = facilities.find(f => f.id === oh.facilityId);
           return {
             id: oh.id,
-            title: 'Öppet',
+            title: `Öppet: ${facility ? facility.name : 'Okänd anläggning'}`,
             start: oh.openingTime,
             end: oh.closingTime,
             type: 'openingHours',
@@ -156,6 +174,7 @@ const MyCalendar = () => {
             end: schedule.endTime,
             type: 'instructorSchedule',
             extendedProps: {
+              type: 'instructorSchedule',
               instructorId: schedule.instructorId,
               facilityId: schedule.facilityId,
               instructorName: instructor ? `${instructor.firstName} ${instructor.lastName}` : 'Okänd',
@@ -170,50 +189,11 @@ const MyCalendar = () => {
     } catch (error) {
       console.error('Failed to fetch instructor schedules:', error);
     }
-  };
+  };;
 
-  const handleEventClick = async (info) => {
-    if (info.event.extendedProps.type === 'booking') {
-      try {
-        const booking = await BookingService.getBooking(info.event.id);
-        setSelectedBooking(booking);
-        setBookingDialogOpen(true);
-      } catch (error) {
-        console.error('Failed to fetch booking details:', error);
-      }
-    } else if (isAdmin) {
-      if (info.event.extendedProps.type === 'openingHours') {
-        try {
-          const openingHours = await getAllOpeningHours(info.event.id);
-          if (openingHours.success) {
-            setSelectedOpeningHours(openingHours.data);
-            setOpeningHoursDialogOpen(true);
-          }
-        } catch (error) {
-          console.error('Failed to fetch opening hours details:', error);
-        }
-      } else if (info.event.extendedProps.type === 'facilityAvailability') {
-        setSelectedFacilityAvailability({
-          id: info.event.id,
-          facilityId: info.event.extendedProps.facilityId,
-          startTime: info.event.start,
-          endTime: info.event.end,
-          seasonal: info.event.extendedProps.seasonal
-        });
-        setFacilityAvailabilityDialogOpen(true);
-      } else if (info.event.extendedProps.type === 'instructorSchedule') {
-        setSelectedInstructorSchedule({
-          id: info.event.id,
-          instructorId: info.event.extendedProps.instructorId,
-          facilityId: info.event.extendedProps.facilityId,
-          startTime: info.event.start,
-          endTime: info.event.end
-        });
-        setInstructorScheduleDialogOpen(true);
-      }
-    } else {
-      showSnackbar('Du har inte behörighet att hantera öppettider eller tillgänglighet.', 'warning');
-    }
+  const handleEventClick = (info) => {
+    setSelectedEvent(info.event);
+    setModalOpen(true);
   };
 
   const handleNewBooking = () => {
@@ -238,6 +218,63 @@ const MyCalendar = () => {
   const handleSaveBooking = () => {
     setConfirmAction('saveBooking');
     setConfirmDialogOpen(true);
+  };
+
+  const handleEditEvent = async (editedEvent) => {
+    try {
+      let result;
+      switch (editedEvent.extendedProps.type) {
+        case 'booking':
+          result = await BookingService.updateBooking(editedEvent.id, {
+            title: editedEvent.title,
+            facilityId: editedEvent.extendedProps.facilityId,
+            startTime: editedEvent.start,
+            endTime: editedEvent.end
+          }, cookies.token);
+          break;
+        case 'openingHours':
+          result = await updateOpeningHours(editedEvent.id, {
+            facilityId: editedEvent.extendedProps.facilityId,
+            openingTime: editedEvent.start,
+            closingTime: editedEvent.end,
+            assignedLeaderId: editedEvent.extendedProps.assignedLeaderId
+          });
+          break;
+        case 'facilityAvailability':
+          result = await updateAvailability(editedEvent.id, {
+            facilityId: editedEvent.extendedProps.facilityId,
+            startTime: editedEvent.start,
+            endTime: editedEvent.end,
+            seasonal: editedEvent.extendedProps.seasonal
+          });
+          break;
+        case 'instructorSchedule':
+          result = await updateSchedule(editedEvent.id, {
+            instructorId: editedEvent.extendedProps.instructorId,
+            facilityId: editedEvent.extendedProps.facilityId,
+            startTime: editedEvent.start,
+            endTime: editedEvent.end
+          });
+          break;
+        default:
+          throw new Error('Unknown event type');
+      }
+
+      if (result.success) {
+        showSnackbar('Händelsen har uppdaterats framgångsrikt', 'success');
+        // Uppdatera händelserna i kalendern
+        await fetchBookings();
+        await fetchOpeningHours();
+        await fetchFacilityAvailability();
+        await fetchInstructorSchedules();
+      } else {
+        showSnackbar(result.error || 'Misslyckades med att uppdatera händelsen', 'error');
+      }
+    } catch (error) {
+      console.error('Failed to update event:', error);
+      showSnackbar('Ett oväntat fel inträffade. Vänligen försök igen.', 'error');
+    }
+    handleClose();
   };
 
   const confirmSaveBooking = async () => {
@@ -279,10 +316,12 @@ const MyCalendar = () => {
     setConfirmDialogOpen(false);
   };
 
+
   const handleDeleteBooking = () => {
     setConfirmAction('deleteBooking');
     setConfirmDialogOpen(true);
   };
+
 
   const confirmDeleteBooking = async () => {
     try {
@@ -341,6 +380,7 @@ const MyCalendar = () => {
     }
     setConfirmDialogOpen(false);
   };
+
 
   const handleSaveFacilityAvailability = () => {
     setConfirmAction('saveFacilityAvailability');
@@ -450,7 +490,7 @@ const MyCalendar = () => {
               <Button variant="contained" color="primary" onClick={handleNewOpeningHours} style={{ marginBottom: '20px', marginRight: '10px' }}>
                 Nya Öppettider
               </Button>
-              <Button variant="contained" color="primary" onClick={handleNewFacilityAvailability} style={{ marginBottom: '20px',marginRight: '10px' }}>
+              <Button variant="contained" color="primary" onClick={handleNewFacilityAvailability} style={{ marginBottom: '20px', marginRight: '10px' }}>
                 Ny Tillgänglighet
               </Button>
               <Button variant="contained" color="primary" onClick={() => setInstructorScheduleDialogOpen(true)} style={{ marginBottom: '20px' }}>
@@ -753,7 +793,7 @@ const MyCalendar = () => {
             </DialogContent>
             <DialogActions>
               <Button onClick={() => setConfirmDialogOpen(false)} color="primary">Avbryt</Button>
-              <Button 
+              <Button
                 onClick={() => {
                   switch (confirmAction) {
                     case 'saveBooking': confirmSaveBooking(); break;
@@ -765,8 +805,8 @@ const MyCalendar = () => {
                     case 'saveInstructorSchedule': confirmSaveInstructorSchedule(); break;
                     case 'deleteInstructorSchedule': confirmDeleteInstructorSchedule(); break;
                   }
-                }} 
-                color="primary" 
+                }}
+                color="primary"
                 autoFocus
               >
                 Bekräfta
@@ -776,23 +816,33 @@ const MyCalendar = () => {
 
           {/* Snackbar for notifications */}
           <Snackbar
-  open={snackbarOpen}
-  autoHideDuration={6000}
-  onClose={() => setSnackbarOpen(false)}
-  anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
->
-  <Alert onClose={() => setSnackbarOpen(false)} severity={snackbarSeverity} sx={{ width: '100%' }}>
-    {Array.isArray(snackbarMessage) ? (
-      snackbarMessage.map((line, index) => <div key={index}>{line}</div>)
-    ) : (
-      snackbarMessage
-    )}
-  </Alert>
-</Snackbar>
+            open={snackbarOpen}
+            autoHideDuration={6000}
+            onClose={() => setSnackbarOpen(false)}
+            anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+          >
+            <Alert onClose={() => setSnackbarOpen(false)} severity={snackbarSeverity} sx={{ width: '100%' }}>
+              {Array.isArray(snackbarMessage) ? (
+                snackbarMessage.map((line, index) => <div key={index}>{line}</div>)
+              ) : (
+                snackbarMessage
+              )}
+            </Alert>
+          </Snackbar>
         </Paper>
       </Grid>
+      <EventDetailsModal 
+  open={modalOpen}
+  onClose={handleClose}
+  event={selectedEvent}
+  isAdmin={isAdmin}
+  onEdit={handleEditEvent}
+  facilities={facilities}
+  members={members}
+/>
     </Grid>
   );
 };
+
 
 export default MyCalendar;
