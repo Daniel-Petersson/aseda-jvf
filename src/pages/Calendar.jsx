@@ -141,22 +141,40 @@ const MyCalendar = () => {
 
   const fetchFacilityAvailability = async () => {
     try {
-      const response = await getAvailabilityByFacility();
-      if (response.success) {
-        const formattedAvailability = response.data.map(fa => ({
-          id: fa.availabilityId,
-          title: 'Tillgänglig',
-          start: fa.startTime,
-          end: fa.endTime,
-          type: 'facilityAvailability',
-          seasonal: fa.seasonal
-        }));
-        setEvents(prevEvents => [...prevEvents.filter(e => e.type !== 'facilityAvailability'), ...formattedAvailability]);
-      } else {
-        console.error('Failed to fetch facility availability:', response.error);
+      if (!facilities || facilities.length === 0) {
+        console.warn('No facilities available to fetch availability');
+        return;
       }
+  
+      const availabilityPromises = facilities.map(facility => 
+        getAvailabilityByFacility(facility.id)
+      );
+      const availabilityResponses = await Promise.all(availabilityPromises);
+      
+      const formattedAvailability = availabilityResponses.flatMap(response => {
+        if (response.success) {
+          return response.data.map(fa => ({
+            id: fa.id,
+            title: `Tillgänglig: ${facilities.find(f => f.id === fa.facilityId)?.name || 'Okänd anläggning'}`,
+            start: fa.startTime,
+            end: fa.endTime,
+            type: 'facilityAvailability',
+            seasonal: fa.seasonal,
+            extendedProps: {
+              type: 'facilityAvailability',
+              facilityId: fa.facilityId
+            }
+          }));
+        } else {
+          console.error('Failed to fetch facility availability:', response.error);
+          return [];
+        }
+      });
+      
+      setEvents(prevEvents => [...prevEvents.filter(e => e.type !== 'facilityAvailability'), ...formattedAvailability]);
     } catch (error) {
       console.error('Failed to fetch facility availability:', error);
+      showSnackbar('Ett fel uppstod vid hämtning av anläggningarnas tillgänglighet. Vänligen försök igen.', 'error');
     }
   };
 
