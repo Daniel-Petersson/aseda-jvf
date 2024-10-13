@@ -14,19 +14,57 @@ import {
   FormControlLabel, 
   Checkbox 
 } from '@mui/material';
+import BookingService from '../../services/BookingService';
+import { getAllOpeningHours } from '../../services/OpeningHoursService';
+import { getAvailabilityByFacility } from '../../services/FacilityAvailabilityService';
+import { getAllSchedules } from '../../services/InstructorScheduleService';
 
 const EventDetailsModal = ({ open, onClose, event, onEdit, isAdmin, facilities, members }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editedEvent, setEditedEvent] = useState(null);
 
   useEffect(() => {
-    if (event) {
-      setEditedEvent({
-        ...event,
-        startTime: event.start instanceof Date ? event.start.toISOString().slice(0, 16) : event.start,
-        endTime: event.end instanceof Date ? event.end.toISOString().slice(0, 16) : event.end
-      });
-    }
+    const fetchEventDetails = async () => {
+      if (event && event.extendedProps) {
+        let detailedEvent;
+        try {
+          switch (event.extendedProps.type) {
+            case 'booking':
+              const bookings = await BookingService.getAllBookings();
+              detailedEvent = bookings.find(booking => booking.id === event.id);
+              break;
+            case 'openingHours':
+              const openingHours = await getAllOpeningHours();
+              detailedEvent = openingHours.data.find(oh => oh.id === event.id);
+              break;
+            case 'facilityAvailability':
+              const availabilities = await getAvailabilityByFacility();
+              detailedEvent = availabilities.data.find(a => a.id === event.id);
+              break;
+            case 'instructorSchedule':
+              const schedules = await getAllSchedules();
+              detailedEvent = schedules.data.find(s => s.id === event.id);
+              break;
+            default:
+              throw new Error('Unknown event type');
+          }
+          if (detailedEvent) {
+            setEditedEvent({
+              ...detailedEvent,
+              startTime: detailedEvent.startTime || detailedEvent.openingTime,
+              endTime: detailedEvent.endTime || detailedEvent.closingTime,
+            });
+          } else {
+            console.error('Event not found');
+          }
+        } catch (error) {
+          console.error('Failed to fetch event details:', error);
+          // Här kan du lägga till en funktion för att visa ett felmeddelande för användaren
+        }
+      }
+    };
+
+    fetchEventDetails();
   }, [event]);
 
   if (!event || !editedEvent) return null;
@@ -91,6 +129,30 @@ const EventDetailsModal = ({ open, onClose, event, onEdit, isAdmin, facilities, 
                 {facilities.map(facility => (
                   <MenuItem key={facility.id} value={facility.id}>{facility.name}</MenuItem>
                 ))}
+              </Select>
+            </FormControl>
+            <FormControl fullWidth margin="dense">
+              <InputLabel>Medlem</InputLabel>
+              <Select
+                name="memberId"
+                value={editedEvent.memberId || ''}
+                onChange={handleInputChange}
+              >
+                {members.map(member => (
+                  <MenuItem key={member.id} value={member.id}>{`${member.firstName} ${member.lastName}`}</MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+            <FormControl fullWidth margin="dense">
+              <InputLabel>Status</InputLabel>
+              <Select
+                name="status"
+                value={editedEvent.status || ''}
+                onChange={handleInputChange}
+              >
+                <MenuItem value="PENDING">Väntande</MenuItem>
+                <MenuItem value="APPROVED">Godkänd</MenuItem>
+                <MenuItem value="REJECTED">Avvisad</MenuItem>
               </Select>
             </FormControl>
           </>
@@ -251,6 +313,62 @@ const EventDetailsModal = ({ open, onClose, event, onEdit, isAdmin, facilities, 
     }
   };
 
+  const renderEventDetails = () => {
+    if (!editedEvent || !event.extendedProps) return null;
+
+    const facility = facilities.find(f => f.id === editedEvent.facilityId);
+    const facilityName = facility ? facility.name : 'Ej angivet';
+
+    switch (event.extendedProps.type) {
+      case 'booking':
+        const member = members.find(m => m.id === editedEvent.memberId);
+        const memberName = member ? `${member.firstName} ${member.lastName}` : 'Ej angivet';
+        return (
+          <>
+            <Typography variant="body1">Titel: {editedEvent.title}</Typography>
+            <Typography variant="body1">Anläggning: {facilityName}</Typography>
+            <Typography variant="body1">Medlem: {memberName}</Typography>
+            <Typography variant="body1">Start: {new Date(editedEvent.startTime).toLocaleString()}</Typography>
+            <Typography variant="body1">Slut: {new Date(editedEvent.endTime).toLocaleString()}</Typography>
+            <Typography variant="body1">Status: {editedEvent.status}</Typography>
+          </>
+        );
+      case 'openingHours':
+        const leader = members.find(m => m.id === editedEvent.assignedLeaderId);
+        const leaderName = leader ? `${leader.firstName} ${leader.lastName}` : 'Ej angivet';
+        return (
+          <>
+            <Typography variant="body1">Anläggning: {facilityName}</Typography>
+            <Typography variant="body1">Öppettid: {new Date(editedEvent.startTime).toLocaleString()}</Typography>
+            <Typography variant="body1">Stängningstid: {new Date(editedEvent.endTime).toLocaleString()}</Typography>
+            <Typography variant="body1">Ansvarig ledare: {leaderName}</Typography>
+          </>
+        );
+      case 'facilityAvailability':
+        return (
+          <>
+            <Typography variant="body1">Anläggning: {facilityName}</Typography>
+            <Typography variant="body1">Starttid: {new Date(editedEvent.startTime).toLocaleString()}</Typography>
+            <Typography variant="body1">Sluttid: {new Date(editedEvent.endTime).toLocaleString()}</Typography>
+            <Typography variant="body1">Säsongsbaserad: {editedEvent.seasonal ? 'Ja' : 'Nej'}</Typography>
+          </>
+        );
+      case 'instructorSchedule':
+        const instructor = members.find(m => m.id === editedEvent.instructorId);
+        const instructorName = instructor ? `${instructor.firstName} ${instructor.lastName}` : 'Ej angivet';
+        return (
+          <>
+            <Typography variant="body1">Instruktör: {instructorName}</Typography>
+            <Typography variant="body1">Anläggning: {facilityName}</Typography>
+            <Typography variant="body1">Starttid: {new Date(editedEvent.startTime).toLocaleString()}</Typography>
+            <Typography variant="body1">Sluttid: {new Date(editedEvent.endTime).toLocaleString()}</Typography>
+          </>
+        );
+      default:
+        return null;
+    }
+  };
+
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
       <DialogTitle>{isEditing ? `Redigera ${event.extendedProps.type}` : event.title}</DialogTitle>
@@ -258,17 +376,7 @@ const EventDetailsModal = ({ open, onClose, event, onEdit, isAdmin, facilities, 
         {isEditing ? (
           renderFields()
         ) : (
-          <>
-            <Typography variant="body1">
-              Start: {event.start ? new Date(event.start).toLocaleString() : 'Ej angivet'}
-            </Typography>
-            <Typography variant="body1">
-              Slut: {event.end ? new Date(event.end).toLocaleString() : 'Ej angivet'}
-            </Typography>
-            <Typography variant="body1">
-              Anläggning: {facilities.find(f => f.id === event.extendedProps.facilityId)?.name || 'Ej angivet'}
-            </Typography>
-          </>
+          renderEventDetails()
         )}
       </DialogContent>
       <DialogActions>

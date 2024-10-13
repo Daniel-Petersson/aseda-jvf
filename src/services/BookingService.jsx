@@ -14,13 +14,20 @@ const BookingService = {
     }
   },
 
-  getBooking: async (bookingId) => {
+  getBooking: async (id) => {
     try {
-      const response = await axios.get(`${API_URL}${bookingId}`);
-      return response.data;
+      if (!id) {
+        throw new Error('Booking ID is required');
+      }
+      const response = await axios.get(`${API_URL}${id}`);
+      return { success: true, data: response.data };
     } catch (error) {
       console.error('Error fetching booking details:', error);
-      throw error;
+      return {
+        success: false,
+        error: error.response?.data?.message || 'Failed to fetch booking details',
+        status: error.response?.status || 500
+      };
     }
   },
 

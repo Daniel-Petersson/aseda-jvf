@@ -182,7 +182,7 @@ const MyCalendar = () => {
     try {
       const response = await getAllSchedules();
       if (response.success) {
-        const formattedSchedules = await Promise.all(response.data.map(async schedule => {
+        const formattedSchedules = response.data.map(schedule => {
           const instructor = members.find(m => m.id === schedule.instructorId);
           const facility = facilities.find(f => f.id === schedule.facilityId);
           return {
@@ -199,7 +199,7 @@ const MyCalendar = () => {
               facilityName: facility ? facility.name : 'Okänd anläggning'
             }
           };
-        }));
+        });
         setEvents(prevEvents => [...prevEvents.filter(e => e.type !== 'instructorSchedule'), ...formattedSchedules]);
       } else {
         console.error('Failed to fetch instructor schedules:', response.error);
