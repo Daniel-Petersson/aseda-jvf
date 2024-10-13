@@ -28,39 +28,51 @@ const EventDetailsModal = ({ open, onClose, event, onEdit, isAdmin, facilities, 
       if (event && event.extendedProps) {
         let detailedEvent;
         try {
+          console.log('Fetching event details for:', event);
           switch (event.extendedProps.type) {
             case 'booking':
               const bookings = await BookingService.getAllBookings();
-              detailedEvent = bookings.find(booking => booking.id === event.id);
+              console.log('All bookings:', bookings);
+              detailedEvent = bookings.find(booking => booking.id.toString() === event.id);
               break;
             case 'openingHours':
               const openingHours = await getAllOpeningHours();
-              detailedEvent = openingHours.data.find(oh => oh.id === event.id);
+              console.log('All opening hours:', openingHours);
+              detailedEvent = openingHours.data?.find(oh => oh.id === event.id);
               break;
             case 'facilityAvailability':
-              const availabilities = await getAvailabilityByFacility();
-              detailedEvent = availabilities.data.find(a => a.id === event.id);
+              if (event.extendedProps.facilityId) {
+                const availabilities = await getAvailabilityByFacility(event.extendedProps.facilityId);
+                console.log('Facility availabilities:', availabilities);
+                detailedEvent = availabilities.data?.find(a => a.id === event.id);
+              } else {
+                console.error('Facility ID is missing for facilityAvailability event');
+              }
               break;
             case 'instructorSchedule':
               const schedules = await getAllSchedules();
-              detailedEvent = schedules.data.find(s => s.id === event.id);
+              console.log('All instructor schedules:', schedules);
+              detailedEvent = schedules.data?.find(s => s.id === event.id);
               break;
             default:
               throw new Error('Unknown event type');
           }
           if (detailedEvent) {
+            console.log('Detailed event found:', detailedEvent);
             setEditedEvent({
               ...detailedEvent,
               startTime: detailedEvent.startTime || detailedEvent.openingTime,
               endTime: detailedEvent.endTime || detailedEvent.closingTime,
             });
           } else {
-            console.error('Event not found');
+            console.error('Event not found. Event:', event, 'Detailed event:', detailedEvent);
           }
         } catch (error) {
           console.error('Failed to fetch event details:', error);
-          // Här kan du lägga till en funktion för att visa ett felmeddelande för användaren
+          // Here you can add a function to show an error message to the user
         }
+      } else {
+        console.error('Event or event.extendedProps is undefined:', event);
       }
     };
 

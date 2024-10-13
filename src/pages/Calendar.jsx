@@ -69,14 +69,17 @@ const MyCalendar = () => {
     try {
       const bookings = await BookingService.getAllBookings();
       const formattedBookings = bookings.map(booking => ({
-        id: booking.id,
+        id: booking.id.toString(),
         title: `Bokning: ${booking.title} - ${facilities.find(f => f.id === booking.facilityId)?.name || 'Okänd anläggning'}`,
         start: booking.startTime,
         end: booking.endTime,
         type: 'booking',
         extendedProps: {
           type: 'booking',
-          facilityName: facilities.find(f => f.id === booking.facilityId)?.name || 'Okänd anläggning'
+          facilityId: booking.facilityId.toString(),
+          facilityName: facilities.find(f => f.id === booking.facilityId)?.name || 'Okänd anläggning',
+          memberId: booking.memberId.toString(),
+          status: booking.status
         }
       }));
       setEvents(prevEvents => [...prevEvents.filter(e => e.type !== 'booking'), ...formattedBookings]);
@@ -84,7 +87,7 @@ const MyCalendar = () => {
       console.error('Failed to fetch bookings:', error);
       showSnackbar('Ett fel uppstod vid hämtning av bokningar. Vänligen försök igen.', 'error');
     }
-  }
+  };
 
   const fetchOpeningHours = async () => {
     try {
@@ -93,7 +96,6 @@ const MyCalendar = () => {
         const formattedOpeningHours = response.data.map(oh => {
           const facility = facilities.find(f => f.id === oh.facilityId);
           return {
-            id: oh.id,
             title: `Öppet: ${facility ? facility.name : 'Okänd anläggning'}`,
             start: oh.openingTime,
             end: oh.closingTime,
@@ -867,6 +869,7 @@ const MyCalendar = () => {
   facilities={facilities}
   members={members}
 />
+
     </Grid>
   );
 };
