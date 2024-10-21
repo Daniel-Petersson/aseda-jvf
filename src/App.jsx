@@ -20,10 +20,13 @@ import ProtectedRoute from './components/common/ProtectedRoute';
 import NewsManagement from './components/admin/NewsManagement';
 import MemberManagement from './components/admin/MemberManagement';
 import { AuthProvider } from './utils/AuthContext';
+import { Provider } from 'react-redux';
+import store from './store/store';
 
 function App() {
   return (
     <AuthProvider>
+      <Provider store={store}>
       <Router>
         <Layout>
           <Routes>
@@ -46,7 +49,8 @@ function App() {
             <Route path="/memberManagement" element={<ProtectedRoute roles={['ADMIN']} element={<MemberManagement />} />} />
           </Routes>
         </Layout>
-      </Router>
+        </Router>
+      </Provider>
     </AuthProvider>
   );
 }
