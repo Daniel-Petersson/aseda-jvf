@@ -33,10 +33,14 @@ const Calendar = () => {
         InstructorScheduleService.getAllSchedules()
       ]);
 
+      const formattedBookings = await formatBookings(bookingsResponse);
+      const formattedOpeningHours = await formatOpeningHours(openingHoursResponse.data);
+      const formattedInstructorSchedules = await formatInstructorSchedules(instructorSchedulesResponse.data);
+
       const formattedEvents = [
-        ...formatBookings(bookingsResponse),
-        ...formatOpeningHours(openingHoursResponse.data),
-        ...formatInstructorSchedules(instructorSchedulesResponse.data)
+        ...formattedBookings,
+        ...formattedOpeningHours,
+        ...formattedInstructorSchedules
       ];
 
       setEvents(formattedEvents);
@@ -45,43 +49,72 @@ const Calendar = () => {
     }
   };
 
-  const formatBookings = (bookings) => bookings.map(booking => ({
-    id: booking.id,
-    title: booking.title,
-    start: booking.startTime,
-    end: booking.endTime,
-    backgroundColor: 'rgba(93, 102, 81, 0.2)', // Light green background
-    borderColor: '#5D6651', // Green border
-    textColor: '#5D6651', // Green text
-    extendedProps: { 
-      type: 'booking', 
-      status: booking.status,
-      facilityId: booking.facilityId,
-      memberId: booking.memberId
-    }
-  }));
+  const formatBookings = async (bookings) => {
+    const formattedBookings = await Promise.all(bookings.map(async booking => {
+      const facilityResponse = await FacilityService.getFacilityById(booking.facilityId);
+      return {
+        id: booking.id,
+        title: `Bokning: ${booking.id}`,
+        start: booking.startTime,
+        end: booking.endTime,
+        backgroundColor: 'rgba(93, 102, 81, 0.2)',
+        borderColor: '#5D6651',
+        textColor: '#5D6651',
+        extendedProps: { 
+          type: 'booking', 
+          ...booking,
+          facilityName: facilityResponse.data.name
+        }
+      };
+    }));
+    return formattedBookings;
+  };
 
-  const formatOpeningHours = (openingHours) => openingHours.map(oh => ({
-    id: `oh-${oh.facilityId}`,
-    title: `Öppettider: ${new Date(oh.openingTime).toLocaleTimeString()} - ${new Date(oh.closingTime).toLocaleTimeString()}`,
-    start: oh.openingTime,
-    end: oh.closingTime,
-    backgroundColor: 'rgba(212, 161, 94, 0.2)',
-    borderColor: '#D4A15E',
-    textColor: '#5D6651',
-    extendedProps: { type: 'openingHours', ...oh }
-  }));
+  const formatOpeningHours = async (openingHours) => {
+    const formattedOpeningHours = await Promise.all(openingHours.map(async oh => {
+      const facilityResponse = await FacilityService.getFacilityById(oh.facilityId);
+      return {
+        id: `oh-${oh.facilityId}`,
+        title: `Öppettider: ${facilityResponse.data.name}`,
+        start: oh.openingTime,
+        end: oh.closingTime,
+        backgroundColor: 'rgba(212, 161, 94, 0.2)',
+        borderColor: '#D4A15E',
+        textColor: '#5D6651',
+        extendedProps: { 
+          type: 'openingHours', 
+          ...oh,
+          facilityName: facilityResponse.data.name
+        }
+      };
+    }));
+    return formattedOpeningHours;
+  };
 
-  const formatInstructorSchedules = (schedules) => schedules.map(schedule => ({
-    id: schedule.id,
-    title: `Instruktör: ${schedule.instructorId}`,
-    start: schedule.startTime,
-    end: schedule.endTime,
-    backgroundColor: '#F0F0F0',
-    borderColor: '#D4A15E',
-    textColor: '#5D6651',
-    extendedProps: { type: 'instructorSchedule', ...schedule }
-  }));
+  const formatInstructorSchedules = async (schedules) => {
+    const formattedSchedules = await Promise.all(schedules.map(async schedule => {
+      const [facilityResponse, instructorResponse] = await Promise.all([
+        FacilityService.getFacilityById(schedule.facilityId),
+        MemberService.getMember(schedule.instructorId)
+      ]);
+      return {
+        id: schedule.id,
+        title: `Instruktör: ${instructorResponse.data.firstName} ${instructorResponse.data.lastName}`,
+        start: schedule.startTime,
+        end: schedule.endTime,
+        backgroundColor: '#F0F0F0',
+        borderColor: '#D4A15E',
+        textColor: '#5D6651',
+        extendedProps: { 
+          type: 'instructorSchedule', 
+          ...schedule,
+          facilityName: facilityResponse.data.name,
+          instructorName: `${instructorResponse.data.firstName} ${instructorResponse.data.lastName}`
+        }
+      };
+    }));
+    return formattedSchedules;
+  };
 
   const handleEventClick = async (clickInfo) => {
     const eventType = clickInfo.event.extendedProps.type;
@@ -163,6 +196,9 @@ const Calendar = () => {
             <Box>
               <Typography variant="body2" fontWeight="bold">{eventInfo.timeText}</Typography>
               <Typography variant="body2">{eventInfo.event.title}</Typography>
+              {(eventInfo.event.extendedProps.type === 'instructorSchedule' || eventInfo.event.extendedProps.type === 'booking') && (
+                <Typography variant="body2">Anläggning: {eventInfo.event.extendedProps.facilityName}</Typography>
+              )}
             </Box>
           )}
           eventDisplay="block"
