@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useContext } from 'react';
-import { Box, Typography, useMediaQuery, useTheme } from '@mui/material';
+import { Box, Typography, useMediaQuery, useTheme, Button } from '@mui/material';
 import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
@@ -20,6 +20,10 @@ const Calendar = () => {
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isCreating, setIsCreating] = useState(false);
+
+  console.log('User object:', user);
+  console.log('User role:', user?.role);
 
   useEffect(() => {
     fetchAllEvents();
@@ -27,11 +31,16 @@ const Calendar = () => {
 
   const fetchAllEvents = async () => {
     try {
+      console.log('Fetching all events...');
       const [bookingsResponse, openingHoursResponse, instructorSchedulesResponse] = await Promise.all([
         BookingService.getAllBookings(),
         OpeningHoursService.getAllOpeningHours(),
         InstructorScheduleService.getAllSchedules()
       ]);
+
+      console.log('Bookings response:', bookingsResponse);
+      console.log('Opening hours response:', openingHoursResponse);
+      console.log('Instructor schedules response:', instructorSchedulesResponse);
 
       const formattedBookings = await formatBookings(bookingsResponse);
       const formattedOpeningHours = await formatOpeningHours(openingHoursResponse.data);
@@ -43,6 +52,7 @@ const Calendar = () => {
         ...formattedInstructorSchedules
       ];
 
+      console.log('Formatted events:', formattedEvents);
       setEvents(formattedEvents);
     } catch (error) {
       console.error('Error fetching events:', error);
@@ -177,9 +187,119 @@ const Calendar = () => {
     }
   };
 
+  const handleCreateBooking = () => {
+    if (user && (user.role === 'USER' || user.role === 'INSTRUCTOR' || user.role === 'ADMIN')) {
+      setSelectedEvent({
+        type: 'booking',
+        title: '',
+        facilityId: '',
+        memberId: user.id, // Automatically set the memberId
+        startTime: new Date(),
+        endTime: new Date(new Date().getTime() + 60 * 60 * 1000), // 1 hour from now
+      });
+      setIsCreating(true);
+      setIsModalOpen(true);
+    } else {
+      alert('Du måste vara inloggad som medlem, instruktör eller administratör för att skapa en bokning.');
+    }
+  };
+
+  const handleCreateOpeningHours = () => {
+    if (user && user.role === 'ADMIN') {
+      setSelectedEvent({
+        type: 'openingHours',
+        title: 'Nya öppettider',
+        openingTime: new Date(),
+        closingTime: new Date(new Date().getTime() + 8 * 60 * 60 * 1000), // 8 hours from now
+      });
+      setIsCreating(true);
+      setIsModalOpen(true);
+    } else {
+      alert('Du måste vara inloggad som administratör för att skapa öppettider.');
+    }
+  };
+
+  const handleCreateInstructorSchedule = () => {
+    if (user && (user.role === 'ADMIN' || user.role === 'INSTRUCTOR')) {
+      setSelectedEvent({
+        type: 'instructorSchedule',
+        instructorId: user.role === 'INSTRUCTOR' ? user.id : '',
+        facilityId: '',
+        startTime: new Date(),
+        endTime: new Date(new Date().getTime() + 2 * 60 * 60 * 1000), // 2 hours from now
+      });
+      setIsCreating(true);
+      setIsModalOpen(true);
+    } else {
+      alert('Du måste vara inloggad som administratör eller instruktör för att skapa ett instruktörsschema.');
+    }
+  };
+
+  const handleEventUpdate = async (updatedEvent) => {
+    // Update the events state with the updated event
+    setEvents(prevEvents => prevEvents.map(event => 
+      event.id === updatedEvent.id ? { ...event, ...updatedEvent } : event
+    ));
+    setIsModalOpen(false);
+    await fetchAllEvents(); // Refresh all events
+  };
+
+  const handleEventCreate = async (newEvent) => {
+    try {
+      const response = await BookingService.createBooking(newEvent);
+      if (response.success) {
+        await fetchAllEvents(); // Refresh all events
+        setIsModalOpen(false);
+        setIsCreating(false);
+      } else {
+        console.error('Error creating booking:', response.error);
+      }
+    } catch (error) {
+      console.error('Error creating booking:', error);
+    }
+  };
+
+  const handleEventDelete = async (eventToDelete) => {
+    try {
+      let response;
+      switch (eventToDelete.type) {
+        case 'booking':
+          response = await BookingService.deleteBooking(eventToDelete.id, user.token);
+          break;
+        case 'openingHours':
+          response = await OpeningHoursService.deleteOpeningHours(eventToDelete.id);
+          break;
+        case 'instructorSchedule':
+          response = await InstructorScheduleService.deleteSchedule(eventToDelete.id);
+          break;
+        default:
+          throw new Error('Invalid event type');
+      }
+
+      if (response.success) {
+        setEvents(prevEvents => prevEvents.filter(event => event.id !== eventToDelete.id));
+        alert('Event deleted successfully');
+      } else {
+        alert(`Error deleting event: ${response.error}`);
+      }
+    } catch (error) {
+      console.error('Error deleting event:', error);
+      alert('An unexpected error occurred while deleting the event.');
+    }
+  };
+
   return (
     <Box sx={{ height: 'calc(100vh - 200px)', display: 'flex', flexDirection: 'column', padding: 2 }}>
       <Typography variant="h2" gutterBottom>Kalender</Typography>
+      <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
+        <Button onClick={handleCreateBooking} variant="contained" color="primary">Skapa bokning</Button>
+        {user && user.role === 'ADMIN' && (
+          <>
+            <Button onClick={handleCreateOpeningHours} variant="contained" color="primary">Skapa öppettider</Button>
+            <Button onClick={handleCreateInstructorSchedule} variant="contained" color="primary">Skapa instruktörsschema</Button>
+          </>
+        )}
+      </Box>
       <Box sx={{ flexGrow: 1, minHeight: 0 }}>
         <FullCalendar
           plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
@@ -207,8 +327,17 @@ const Calendar = () => {
       </Box>
       <EventDetailsModal
         isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
+        onClose={() => {
+          setIsModalOpen(false);
+          setIsCreating(false);
+        }}
         event={selectedEvent}
+        onEventUpdate={handleEventUpdate}
+        onEventCreate={handleEventCreate}
+        onEventDelete={handleEventDelete}
+        isCreating={isCreating}
+        userRole={user ? user.role : null}
+        isAuthenticated={!!user}
       />
     </Box>
   );

@@ -32,7 +32,17 @@ export const getBooking = async (id) => {
 
 export const createBooking = async (bookingData) => {
   try {
-    const response = await axios.post(API_URL, bookingData);
+    const { title, facilityId, memberId, startTime, endTime } = bookingData;
+    if (!title || !facilityId || !memberId || !startTime || !endTime) {
+      throw new Error('All fields are required: title, facilityId, memberId, startTime, endTime');
+    }
+    const response = await axios.post(API_URL, {
+      title,
+      facilityId,
+      memberId,
+      startTime,
+      endTime
+    });
     return { success: true, data: response.data };
   } catch (error) {
     return handleErrorResponse(error);
