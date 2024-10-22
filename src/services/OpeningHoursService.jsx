@@ -4,7 +4,15 @@ const REST_API_OPENING_HOURS_URL = "http://localhost:8080/api/opening-hours/";
 
 export const createOpeningHours = async (openingHours) => {
     try {
-        const response = await axios.post(REST_API_OPENING_HOURS_URL, openingHours);
+        const formattedOpeningHours = {
+            facilityId: openingHours.facilityId,
+            openingTime: new Date(openingHours.openingTime).toISOString(),
+            closingTime: new Date(openingHours.closingTime).toISOString(),
+            assignedLeaderId: openingHours.assignedLeaderId || null // Add this field
+        };
+        console.log('Creating opening hours with data:', formattedOpeningHours);
+        const response = await axios.post(REST_API_OPENING_HOURS_URL, formattedOpeningHours);
+        console.log('Opening hours creation response:', response.data);
         return { success: true, data: response.data };
     } catch (error) {
         console.error("Error creating opening hours:", error);

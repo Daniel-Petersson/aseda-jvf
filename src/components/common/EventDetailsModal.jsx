@@ -1,15 +1,20 @@
 import React, { useState, useEffect } from 'react';
 import { Modal, Box, Typography, Button, TextField, Select, MenuItem, FormControl, InputLabel } from '@mui/material';
-import * as BookingService from '../../services/BookingService';
 import * as OpeningHoursService from '../../services/OpeningHoursService';
 import * as InstructorScheduleService from '../../services/InstructorScheduleService';
 import * as FacilityService from '../../services/FacilityService';
+import * as BookingService from '../../services/BookingService';
+import * as MemberService from '../../services/MemberService';
+import { AuthContext } from '../../utils/AuthContext';
 
-const EventDetailsModal = ({ isOpen, onClose, event, onEventUpdate, onEventCreate, onEventDelete, isCreating, userRole, isAuthenticated }) => {
+const EventDetailsModal = ({ isOpen, onClose, event, onEventUpdate, onEventCreate, onEventDelete, isCreating, userRole, isAuthenticated, user }) => {
   const [editedEvent, setEditedEvent] = useState(event);
   const [facilities, setFacilities] = useState([]);
   const [isEditing, setIsEditing] = useState(isCreating);
   const [errors, setErrors] = useState({});
+  const [instructors, setInstructors] = useState([]);
+  const [filteredMembers, setFilteredMembers] = useState([]);
+  const [filteredInstructors, setFilteredInstructors] = useState([]);
 
   useEffect(() => {
     if (isCreating) {
@@ -22,12 +27,50 @@ const EventDetailsModal = ({ isOpen, onClose, event, onEventUpdate, onEventCreat
     }
     setIsEditing(isCreating);
     fetchFacilities();
+    fetchInstructors();
+    fetchFilteredMembers();
+    fetchFilteredInstructors();
   }, [event, isCreating]);
 
   const fetchFacilities = async () => {
     const response = await FacilityService.getAllFacilities();
     if (response.success) {
       setFacilities(response.data);
+    }
+  };
+
+  const fetchInstructors = async () => {
+    const response = await InstructorScheduleService.getAllSchedules();
+    if (response.success) {
+      // Assuming the response data contains instructor information
+      // You might need to adjust this based on the actual structure of the response
+      setInstructors(response.data);
+    } else {
+      console.error('Error fetching instructor schedules:', response.error);
+    }
+  };
+
+  const fetchFilteredMembers = async () => {
+    const response = await MemberService.getAllMembers();
+    if (response.success) {
+      const filteredMembers = response.data.filter(member => 
+        member.role === 'ADMIN' || member.role === 'INSTRUCTOR'
+      );
+      setFilteredMembers(filteredMembers);
+    } else {
+      console.error('Error fetching members:', response.error);
+    }
+  };
+
+  const fetchFilteredInstructors = async () => {
+    const response = await MemberService.getAllMembers();
+    if (response.success) {
+      const filteredInstructors = response.data.filter(member => 
+        member.role === 'INSTRUCTOR'
+      );
+      setFilteredInstructors(filteredInstructors);
+    } else {
+      console.error('Error fetching instructors:', response.error);
     }
   };
 
@@ -42,30 +85,40 @@ const EventDetailsModal = ({ isOpen, onClose, event, onEventUpdate, onEventCreat
 
   const handleSave = async () => {
     if (validateForm()) {
+      let response;
       if (isCreating) {
         if (editedEvent.type === 'booking') {
-          await onEventCreate(editedEvent);
+          const bookingData = {
+            ...editedEvent,
+            memberId: user.memberId
+          };
+          response = await BookingService.createBooking(bookingData);
         } else if (editedEvent.type === 'openingHours') {
-          const response = await OpeningHoursService.createOpeningHours(editedEvent);
-          if (response.success) {
-            onClose();
-            // You might want to refresh the calendar or update the events state here
-          } else {
-            setErrors({ submit: response.error });
-          }
+          response = await OpeningHoursService.createOpeningHours(editedEvent);
         } else if (editedEvent.type === 'instructorSchedule') {
-          const response = await InstructorScheduleService.createSchedule(editedEvent);
-          if (response.success) {
-            onClose();
-            // You might want to refresh the calendar or update the events state here
-          } else {
-            setErrors({ submit: response.error });
-          }
+          console.log('Creating instructor schedule with data:', editedEvent);
+          response = await InstructorScheduleService.createSchedule(editedEvent);
         }
       } else {
-        await onEventUpdate(editedEvent);
+        if (editedEvent.type === 'booking') {
+          response = await BookingService.updateBooking(editedEvent.id, editedEvent, user.token);
+        } else if (editedEvent.type === 'openingHours') {
+          response = await OpeningHoursService.updateOpeningHours(editedEvent.id, editedEvent);
+        } else if (editedEvent.type === 'instructorSchedule') {
+          console.log('Updating instructor schedule with data:', editedEvent);
+          response = await InstructorScheduleService.updateSchedule(editedEvent.id, editedEvent);
+        }
       }
-      setIsEditing(false);
+
+      console.log('Save response:', response);
+
+      if (response.success) {
+        onEventUpdate(editedEvent);
+        setIsEditing(false);
+        onClose();
+      } else {
+        setErrors({ submit: response.error });
+      }
     }
   };
 
@@ -117,9 +170,45 @@ const EventDetailsModal = ({ isOpen, onClose, event, onEventUpdate, onEventCreat
   };
 
   const handleDelete = async () => {
-    if (window.confirm('Är du säker på att du vill ta bort detta event?')) {
-      await onEventDelete(event);
-      onClose();
+    if (editedEvent.type === 'booking' && userRole === 'ADMIN') {
+      try {
+        const response = await BookingService.deleteBooking(editedEvent.id, user.token);
+        if (response.success) {
+          onEventDelete(editedEvent);
+          onClose();
+        } else {
+          setErrors({ submit: response.error });
+        }
+      } catch (error) {
+        console.error('Error deleting booking:', error);
+        setErrors({ submit: 'Failed to delete booking' });
+      }
+    } else if (editedEvent.type === 'openingHours' && userRole === 'ADMIN') {
+      try {
+        const response = await OpeningHoursService.deleteOpeningHours(editedEvent.id);
+        if (response.success) {
+          onEventDelete(editedEvent);
+          onClose();
+        } else {
+          setErrors({ submit: response.error });
+        }
+      } catch (error) {
+        console.error('Error deleting opening hours:', error);
+        setErrors({ submit: 'Failed to delete opening hours' });
+      }
+    } else if (editedEvent.type === 'instructorSchedule' && userRole === 'ADMIN') {
+      try {
+        const response = await InstructorScheduleService.deleteSchedule(editedEvent.id);
+        if (response.success) {
+          onEventDelete(editedEvent);
+          onClose();
+        } else {
+          setErrors({ submit: response.error });
+        }
+      } catch (error) {
+        console.error('Error deleting instructor schedule:', error);
+        setErrors({ submit: 'Failed to delete instructor schedule' });
+      }
     }
   };
 
@@ -179,9 +268,9 @@ const EventDetailsModal = ({ isOpen, onClose, event, onEventUpdate, onEventCreat
               <FormControl fullWidth margin="normal">
                 <InputLabel>Anläggning</InputLabel>
                 <Select
+                  name="facilityId"
                   value={editedEvent.facilityId || ''}
                   onChange={handleInputChange}
-                  name="facilityId"
                 >
                   {facilities.map(facility => (
                     <MenuItem key={facility.id} value={facility.id}>{facility.name}</MenuItem>
@@ -189,7 +278,7 @@ const EventDetailsModal = ({ isOpen, onClose, event, onEventUpdate, onEventCreat
                 </Select>
               </FormControl>
               <TextField
-                label="Öppningstid"
+                label="Öppnar"
                 type="datetime-local"
                 name="openingTime"
                 value={editedEvent.openingTime ? new Date(editedEvent.openingTime).toISOString().slice(0, 16) : ''}
@@ -199,7 +288,7 @@ const EventDetailsModal = ({ isOpen, onClose, event, onEventUpdate, onEventCreat
                 InputLabelProps={{ shrink: true }}
               />
               <TextField
-                label="Stängningstid"
+                label="Stänger"
                 type="datetime-local"
                 name="closingTime"
                 value={editedEvent.closingTime ? new Date(editedEvent.closingTime).toISOString().slice(0, 16) : ''}
@@ -208,34 +297,45 @@ const EventDetailsModal = ({ isOpen, onClose, event, onEventUpdate, onEventCreat
                 margin="normal"
                 InputLabelProps={{ shrink: true }}
               />
+              <FormControl fullWidth margin="normal">
+                <InputLabel>Ansvarig ledare</InputLabel>
+                <Select
+                  name="assignedLeaderId"
+                  value={editedEvent.assignedLeaderId || ''}
+                  onChange={handleInputChange}
+                >
+                  <MenuItem value="">Ingen ansvarig ledare</MenuItem>
+                  {filteredMembers.map(member => (
+                    <MenuItem key={member.id} value={member.id}>{member.firstName} {member.lastName} ({member.role})</MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
             </>
           );
         case 'instructorSchedule':
           return (
             <>
-              {userRole === 'ADMIN' && (
-                <FormControl fullWidth margin="normal">
-                  <InputLabel>Instruktör</InputLabel>
-                  <Select
-                    value={editedEvent.instructorId || ''}
-                    onChange={handleInputChange}
-                    name="instructorId"
-                  >
-                    {instructors.map(instructor => (
-                      <MenuItem key={instructor.id} value={instructor.id}>{instructor.name}</MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-              )}
               <FormControl fullWidth margin="normal">
                 <InputLabel>Anläggning</InputLabel>
                 <Select
+                  name="facilityId"
                   value={editedEvent.facilityId || ''}
                   onChange={handleInputChange}
-                  name="facilityId"
                 >
                   {facilities.map(facility => (
                     <MenuItem key={facility.id} value={facility.id}>{facility.name}</MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+              <FormControl fullWidth margin="normal">
+                <InputLabel>Instruktör</InputLabel>
+                <Select
+                  name="instructorId"
+                  value={editedEvent.instructorId || ''}
+                  onChange={handleInputChange}
+                >
+                  {filteredInstructors.map(instructor => (
+                    <MenuItem key={instructor.id} value={instructor.id}>{instructor.firstName} {instructor.lastName}</MenuItem>
                   ))}
                 </Select>
               </FormControl>

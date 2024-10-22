@@ -4,9 +4,9 @@ const API_URL = 'http://localhost:8080/api/instructor-schedules';
 
 export const createSchedule = async (scheduleData) => {
   try {
-    console.log('Sending schedule data:', scheduleData);
+    console.log('Creating instructor schedule with data:', scheduleData);
     const response = await axios.post(API_URL, scheduleData);
-    console.log('Server response:', response);
+    console.log('Instructor schedule creation response:', response.data);
     return { success: true, data: response.data };
   } catch (error) {
     console.error('Error creating instructor schedule:', error);

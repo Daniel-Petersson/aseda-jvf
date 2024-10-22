@@ -13,6 +13,7 @@ import EventDetailsModal from '../components/common/EventDetailsModal';
 import * as FacilityService from '../services/FacilityService';
 import * as MemberService from '../services/MemberService';
 
+
 const Calendar = () => {
   const [events, setEvents] = useState([]);
   const { user } = useContext(AuthContext);
@@ -64,7 +65,7 @@ const Calendar = () => {
       const facilityResponse = await FacilityService.getFacilityById(booking.facilityId);
       return {
         id: booking.id,
-        title: `Bokning: ${booking.id}`,
+        title: `Bokning: ${booking.title}`,
         start: booking.startTime,
         end: booking.endTime,
         backgroundColor: 'rgba(93, 102, 81, 0.2)',
@@ -220,27 +221,36 @@ const Calendar = () => {
   };
 
   const handleCreateInstructorSchedule = () => {
-    if (user && (user.role === 'ADMIN' || user.role === 'INSTRUCTOR')) {
-      setSelectedEvent({
-        type: 'instructorSchedule',
-        instructorId: user.role === 'INSTRUCTOR' ? user.id : '',
-        facilityId: '',
-        startTime: new Date(),
-        endTime: new Date(new Date().getTime() + 2 * 60 * 60 * 1000), // 2 hours from now
-      });
-      setIsCreating(true);
-      setIsModalOpen(true);
-    } else {
-      alert('Du måste vara inloggad som administratör eller instruktör för att skapa ett instruktörsschema.');
-    }
+    setSelectedEvent({
+      type: 'instructorSchedule',
+      instructorId: '',
+      facilityId: '',
+      startTime: '',
+      endTime: ''
+    });
+    setIsCreating(true);
+    setIsModalOpen(true);
   };
 
   const handleEventUpdate = async (updatedEvent) => {
-    // Update the events state with the updated event
-    setEvents(prevEvents => prevEvents.map(event => 
-      event.id === updatedEvent.id ? { ...event, ...updatedEvent } : event
-    ));
-    setIsModalOpen(false);
+    if (updatedEvent.type === 'booking' && user.role === 'ADMIN') {
+      const response = await BookingService.updateBooking(updatedEvent.id, updatedEvent, user.token);
+      if (response.success) {
+        setEvents(prevEvents => prevEvents.map(event => 
+          event.id === updatedEvent.id ? { ...event, ...response.data } : event
+        ));
+        setIsModalOpen(false);
+      } else {
+        console.error('Error updating booking:', response.error);
+        alert(`Error updating booking: ${response.error}`);
+      }
+    } else {
+      // Handle other event types if necessary
+      setEvents(prevEvents => prevEvents.map(event => 
+        event.id === updatedEvent.id ? { ...event, ...updatedEvent } : event
+      ));
+      setIsModalOpen(false);
+    }
     await fetchAllEvents(); // Refresh all events
   };
 
@@ -253,9 +263,12 @@ const Calendar = () => {
         setIsCreating(false);
       } else {
         console.error('Error creating booking:', response.error);
+        console.error('Error details:', response.details);
+        alert(`Error creating booking: ${response.error}`);
       }
     } catch (error) {
-      console.error('Error creating booking:', error);
+      console.error('Unexpected error creating booking:', error);
+      alert('An unexpected error occurred while creating the booking.');
     }
   };
 
@@ -338,6 +351,7 @@ const Calendar = () => {
         isCreating={isCreating}
         userRole={user ? user.role : null}
         isAuthenticated={!!user}
+        user={user} // Make sure this includes the token
       />
     </Box>
   );
