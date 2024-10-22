@@ -1,11 +1,12 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { Box, Typography, Button, IconButton, Zoom } from '@mui/material';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import AOS from 'aos';
 import 'aos/dist/aos.css';
 import { ParallaxProvider, Parallax } from 'react-scroll-parallax';
 import { motion, useViewportScroll, useTransform } from 'framer-motion';
 import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
+import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
 import { useInView } from 'react-intersection-observer';
 
 function ShootingRanges() {
@@ -56,10 +57,10 @@ function ShootingRanges() {
     },
   ];
 
-  const scrollToNext = (index) => {
-    const nextSection = document.getElementById(`range-${index + 1}`);
-    if (nextSection) {
-      nextSection.scrollIntoView({ behavior: 'smooth' });
+  const scrollToSection = (index) => {
+    const section = document.getElementById(`range-${index}`);
+    if (section) {
+      section.scrollIntoView({ behavior: 'smooth' });
     }
   };
 
@@ -87,7 +88,7 @@ function ShootingRanges() {
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'flex-end',
-                  padding: '0 50px',
+                  padding: '0 10%',
                   color: '#F0EED6',
                   transition: 'all 0.3s ease-in-out',
                   '&:hover': {
@@ -128,6 +129,7 @@ function ShootingRanges() {
                       transition: 'all 0.3s ease-in-out',
                       boxShadow: '0 4px 20px rgba(0,0,0,0.3)',
                       backdropFilter: 'blur(5px)',
+                      marginRight: { xs: 0, md: '10%' },
                     }}
                     data-aos={range.animation}
                   >
@@ -154,6 +156,8 @@ function ShootingRanges() {
                       {range.description}
                     </Typography>
                     <Button
+                      component={Link}
+                      to="/register"
                       variant="contained"
                       size="large"
                       sx={{ 
@@ -168,31 +172,44 @@ function ShootingRanges() {
                         fontWeight: 'bold',
                         letterSpacing: '1px',
                       }}
-                      onClick={() => navigate('/calendar')}
                     >
                       Boka Banan
                     </Button>
                   </Box>
                 </motion.div>
-                {index < ranges.length - 1 && (
-                  <Zoom in={inView} style={{ transitionDelay: inView ? '500ms' : '0ms' }}>
-                    <IconButton
-                      sx={{
-                        position: 'absolute',
-                        bottom: '20px',
-                        left: '50%',
-                        transform: 'translateX(-50%)',
-                        color: '#F0EED6',
-                        '&:hover': {
-                          backgroundColor: 'rgba(255,255,255,0.1)',
-                        },
-                      }}
-                      onClick={() => scrollToNext(index)}
-                    >
-                      <ArrowDownwardIcon fontSize="large" />
-                    </IconButton>
-                  </Zoom>
-                )}
+                <Box sx={{ position: 'absolute', bottom: '20px', left: '50%', transform: 'translateX(-50%)' }}>
+                  {index > 0 && (
+                    <Zoom in={inView} style={{ transitionDelay: inView ? '500ms' : '0ms' }}>
+                      <IconButton
+                        sx={{
+                          color: '#F0EED6',
+                          '&:hover': {
+                            backgroundColor: 'rgba(255,255,255,0.1)',
+                          },
+                          mr: 2,
+                        }}
+                        onClick={() => scrollToSection(index - 1)}
+                      >
+                        <ArrowUpwardIcon fontSize="large" />
+                      </IconButton>
+                    </Zoom>
+                  )}
+                  {index < ranges.length - 1 && (
+                    <Zoom in={inView} style={{ transitionDelay: inView ? '500ms' : '0ms' }}>
+                      <IconButton
+                        sx={{
+                          color: '#F0EED6',
+                          '&:hover': {
+                            backgroundColor: 'rgba(255,255,255,0.1)',
+                          },
+                        }}
+                        onClick={() => scrollToSection(index + 1)}
+                      >
+                        <ArrowDownwardIcon fontSize="large" />
+                      </IconButton>
+                    </Zoom>
+                  )}
+                </Box>
               </Box>
             </Parallax>
           );
