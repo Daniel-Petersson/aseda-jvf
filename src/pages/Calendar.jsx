@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useContext } from 'react';
-import { Box, Typography, useMediaQuery, useTheme, Button } from '@mui/material';
+import React, { useState, useEffect, useContext, useRef } from 'react';
+import { Box, Typography, useMediaQuery, useTheme, Button, Menu, MenuItem } from '@mui/material';
 import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
@@ -12,6 +12,9 @@ import * as InstructorScheduleService from '../services/InstructorScheduleServic
 import EventDetailsModal from '../components/common/EventDetailsModal';
 import * as FacilityService from '../services/FacilityService';
 import * as MemberService from '../services/MemberService';
+import AddIcon from '@mui/icons-material/Add';
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 
 
 const Calendar = () => {
@@ -22,6 +25,9 @@ const Calendar = () => {
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
+  const [anchorEl, setAnchorEl] = useState(null);
+  const [currentDate, setCurrentDate] = useState(new Date());
+  const calendarRef = useRef(null);
 
   console.log('User object:', user);
   console.log('User role:', user?.role);
@@ -301,41 +307,72 @@ const Calendar = () => {
     }
   };
 
+  const handleMenuOpen = (event) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleMenuClose = () => {
+    setAnchorEl(null);
+  };
+
+  const handleDatesSet = (dateInfo) => {
+    setCurrentDate(dateInfo.view.currentStart);
+  };
+
   return (
-    <Box sx={{ height: 'calc(100vh - 200px)', display: 'flex', flexDirection: 'column', padding: 2 }}>
-      <Typography variant="h2" gutterBottom>Kalender</Typography>
-      <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
-        <Button onClick={handleCreateBooking} variant="contained" color="primary">Skapa bokning</Button>
-        {user && user.role === 'ADMIN' && (
-          <>
-            <Button onClick={handleCreateOpeningHours} variant="contained" color="primary">Skapa öppettider</Button>
-            <Button onClick={handleCreateInstructorSchedule} variant="contained" color="primary">Skapa instruktörsschema</Button>
-          </>
-        )}
+    <Box sx={{ height: 'calc(100vh - 64px)', display: 'flex', flexDirection: 'column', padding: { xs: 1, sm: 2 } }}>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+        <Typography variant="h5" sx={{ display: { xs: 'none', sm: 'block' } }}>Kalender</Typography>
+        <Typography variant="h6">{currentDate.toLocaleString('sv-SE', { month: 'long', year: 'numeric' })}</Typography>
+      </Box>
+      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: 2 }}>
+        <Box sx={{ display: 'flex', gap: 1 }}>
+          <Button variant="outlined" size="small" onClick={() => calendarRef.current.getApi().prev()}>
+            <ArrowBackIcon fontSize="small" />
+          </Button>
+          <Button variant="outlined" size="small" onClick={() => calendarRef.current.getApi().next()}>
+            <ArrowForwardIcon fontSize="small" />
+          </Button>
+          <Button variant="outlined" size="small" onClick={() => calendarRef.current.getApi().today()}>
+            Idag
+          </Button>
+        </Box>
+        <Box sx={{ display: 'flex', gap: 1, ml: 'auto' }}>
+          <Button variant="outlined" size="small" onClick={() => calendarRef.current.getApi().changeView('dayGridMonth')}>M</Button>
+          <Button variant="outlined" size="small" onClick={() => calendarRef.current.getApi().changeView('timeGridWeek')}>V</Button>
+          <Button variant="outlined" size="small" onClick={() => calendarRef.current.getApi().changeView('timeGridDay')}>D</Button>
+        </Box>
       </Box>
       <Box sx={{ flexGrow: 1, minHeight: 0 }}>
         <FullCalendar
+          ref={calendarRef}
           plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
           initialView={isMobile ? "timeGridDay" : "dayGridMonth"}
-          headerToolbar={{
-            left: 'prev,next today',
-            center: 'title',
-            right: isMobile ? 'timeGridDay,dayGridMonth' : 'dayGridMonth,timeGridWeek,timeGridDay'
-          }}
+          headerToolbar={false}
           events={events}
           locale={svLocale}
           height="100%"
           eventContent={(eventInfo) => (
-            <Box>
-              <Typography variant="body2" fontWeight="bold">{eventInfo.timeText}</Typography>
-              <Typography variant="body2">{eventInfo.event.title}</Typography>
+            <Box sx={{ fontSize: { xs: '0.7rem', sm: '0.8rem', md: '0.9rem' }, lineHeight: 1.2 }}>
+              <Typography variant="body2" fontWeight="bold" noWrap>{eventInfo.timeText}</Typography>
+              <Typography variant="body2" noWrap>{eventInfo.event.title}</Typography>
               {(eventInfo.event.extendedProps.type === 'instructorSchedule' || eventInfo.event.extendedProps.type === 'booking') && (
-                <Typography variant="body2">Anläggning: {eventInfo.event.extendedProps.facilityName}</Typography>
+                <Typography variant="body2" noWrap>Anl: {eventInfo.event.extendedProps.facilityName}</Typography>
               )}
             </Box>
           )}
           eventDisplay="block"
           eventClick={handleEventClick}
+          dayMaxEvents={isMobile ? 2 : 3}
+          views={{
+            dayGridMonth: {
+              dayMaxEvents: 2,
+            },
+            timeGrid: {
+              dayMaxEvents: 3,
+            },
+          }}
+          datesSet={handleDatesSet}
         />
       </Box>
       <EventDetailsModal
@@ -353,6 +390,28 @@ const Calendar = () => {
         isAuthenticated={!!user}
         user={user} // Make sure this includes the token
       />
+      <Button
+        variant="contained"
+        color="primary"
+        size="small"
+        onClick={handleMenuOpen}
+        startIcon={<AddIcon />}
+      >
+        Skapa
+      </Button>
+      <Menu
+        anchorEl={anchorEl}
+        open={Boolean(anchorEl)}
+        onClose={handleMenuClose}
+      >
+        <MenuItem onClick={() => { handleCreateBooking(); handleMenuClose(); }}>Bokning</MenuItem>
+        {user && user.role === 'ADMIN' && (
+          <>
+            <MenuItem onClick={() => { handleCreateOpeningHours(); handleMenuClose(); }}>Öppettider</MenuItem>
+            <MenuItem onClick={() => { handleCreateInstructorSchedule(); handleMenuClose(); }}>Instruktörsschema</MenuItem>
+          </>
+        )}
+      </Menu>
     </Box>
   );
 };
