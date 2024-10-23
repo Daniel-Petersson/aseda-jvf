@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { Modal, Box, Typography, Button, TextField, Select, MenuItem, FormControl, InputLabel } from '@mui/material';
 import * as OpeningHoursService from '../../services/OpeningHoursService';
 import * as InstructorScheduleService from '../../services/InstructorScheduleService';
@@ -25,6 +25,7 @@ const EventDetailsModal = ({ isOpen, onClose, event, onEventUpdate, onEventCreat
     } else {
       setEditedEvent(event || null);
     }
+    console.log('Updated editedEvent:', event);
     setIsEditing(isCreating);
     fetchFacilities();
     fetchInstructors();
@@ -170,22 +171,21 @@ const EventDetailsModal = ({ isOpen, onClose, event, onEventUpdate, onEventCreat
   };
 
   const handleDelete = async () => {
-    if (editedEvent.type === 'booking' && userRole === 'ADMIN') {
+    console.log('Attempting to delete event:', editedEvent);
+    console.log('Event ID:', editedEvent.id);
+    console.log('Event type:', editedEvent.type);
+    console.log('User role:', userRole);
+
+    if (editedEvent.type === 'openingHours' && userRole === 'ADMIN') {
       try {
-        const response = await BookingService.deleteBooking(editedEvent.id, user.token);
-        if (response.success) {
-          onEventDelete(editedEvent);
-          onClose();
-        } else {
-          setErrors({ submit: response.error });
+        console.log('Deleting opening hours with id:', editedEvent.id);
+        if (!editedEvent.id) {
+          console.error('Opening hours id is undefined');
+          setErrors({ submit: 'Invalid opening hours id' });
+          return;
         }
-      } catch (error) {
-        console.error('Error deleting booking:', error);
-        setErrors({ submit: 'Failed to delete booking' });
-      }
-    } else if (editedEvent.type === 'openingHours' && userRole === 'ADMIN') {
-      try {
         const response = await OpeningHoursService.deleteOpeningHours(editedEvent.id);
+        console.log('Delete opening hours response:', response);
         if (response.success) {
           onEventDelete(editedEvent);
           onClose();
@@ -196,9 +196,41 @@ const EventDetailsModal = ({ isOpen, onClose, event, onEventUpdate, onEventCreat
         console.error('Error deleting opening hours:', error);
         setErrors({ submit: 'Failed to delete opening hours' });
       }
+    } else if (editedEvent.type === 'booking' && userRole === 'ADMIN') {
+      try {
+        console.log('Deleting booking with id:', editedEvent.id);
+        if (!editedEvent.id) {
+          console.error('Booking id is undefined');
+          setErrors({ submit: 'Invalid booking id' });
+          return;
+        }
+        if (!user || !user.token) {
+          console.error('User token is missing');
+          setErrors({ submit: 'User authentication failed' });
+          return;
+        }
+        const response = await BookingService.deleteBooking(editedEvent.id, user.token);
+        console.log('Delete booking response:', response);
+        if (response.success) {
+          onEventDelete(editedEvent);
+          onClose();
+        } else {
+          setErrors({ submit: response.error });
+        }
+      } catch (error) {
+        console.error('Error deleting booking:', error);
+        setErrors({ submit: 'Failed to delete booking' });
+      }
     } else if (editedEvent.type === 'instructorSchedule' && userRole === 'ADMIN') {
       try {
+        console.log('Deleting instructor schedule with id:', editedEvent.id);
+        if (!editedEvent.id) {
+          console.error('Instructor schedule id is undefined');
+          setErrors({ submit: 'Invalid instructor schedule id' });
+          return;
+        }
         const response = await InstructorScheduleService.deleteSchedule(editedEvent.id);
+        console.log('Delete instructor schedule response:', response);
         if (response.success) {
           onEventDelete(editedEvent);
           onClose();
@@ -385,6 +417,9 @@ const EventDetailsModal = ({ isOpen, onClose, event, onEventUpdate, onEventCreat
               <Typography>Anläggning: {event.facilityName}</Typography>
               <Typography>Öppnar: {formatTime(event.openingTime)}</Typography>
               <Typography>Stänger: {formatTime(event.closingTime)}</Typography>
+              {event.assignedLeaderName && (
+                <Typography>Ansvarig ledare: {event.assignedLeaderName}</Typography>
+              )}
             </>
           );
         case 'instructorSchedule':

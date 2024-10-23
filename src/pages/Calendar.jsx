@@ -92,7 +92,7 @@ const Calendar = () => {
       const facilityResponse = await FacilityService.getFacilityById(oh.facilityId);
       return {
         id: `oh-${oh.facilityId}`,
-        title: `Öppettider: ${facilityResponse.data.name}`,
+        title: `Öppettider: ${facilityResponse.data.name}`, // Remove any ID from the title
         start: oh.openingTime,
         end: oh.closingTime,
         backgroundColor: 'rgba(212, 161, 94, 0.2)',
@@ -101,7 +101,8 @@ const Calendar = () => {
         extendedProps: { 
           type: 'openingHours', 
           ...oh,
-          facilityName: facilityResponse.data.name
+          facilityName: facilityResponse.data.name,
+          actualId: oh.id
         }
       };
     }));
@@ -145,6 +146,7 @@ const Calendar = () => {
       if (facilityResponse.success && instructorResponse.success) {
         setSelectedEvent({
           ...clickInfo.event.extendedProps,
+          title: `Öppettider: ${facilityResponse.data.name}`, // Ensure clean title here
           facilityName: facilityResponse.data.name,
           assignedLeaderName: `${instructorResponse.data.firstName} ${instructorResponse.data.lastName}`
         });
@@ -286,7 +288,8 @@ const Calendar = () => {
           response = await BookingService.deleteBooking(eventToDelete.id, user.token);
           break;
         case 'openingHours':
-          response = await OpeningHoursService.deleteOpeningHours(eventToDelete.id);
+          // Use the actualId from extendedProps for deletion
+          response = await OpeningHoursService.deleteOpeningHours(eventToDelete.extendedProps.actualId);
           break;
         case 'instructorSchedule':
           response = await InstructorScheduleService.deleteSchedule(eventToDelete.id);

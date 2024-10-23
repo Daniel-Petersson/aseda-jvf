@@ -39,11 +39,24 @@ export const updateOpeningHours = async (id, openingHours) => {
 };
 
 export const deleteOpeningHours = async (id) => {
+    console.log('Deleting opening hours with id:', id);
+    if (!id) {
+        console.error('Invalid id provided for deleting opening hours');
+        return { 
+            success: false, 
+            error: "Invalid id provided for deleting opening hours",
+            status: 400
+        };
+    }
     try {
-        const response = await axios.delete(`${REST_API_OPENING_HOURS_URL}${id}`);
+        const url = `${REST_API_OPENING_HOURS_URL}${id}`;
+        console.log('DELETE request URL:', url);
+        const response = await axios.delete(url);
+        console.log('Delete response:', response);
         return { success: true, data: response.data };
     } catch (error) {
         console.error("Error deleting opening hours:", error);
+        console.error("Error response:", error.response);
         return { 
             success: false, 
             error: error.response?.data?.message || "An error occurred while deleting opening hours.",
