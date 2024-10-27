@@ -66,11 +66,12 @@ function ShootingRanges() {
 
   return (
     <ParallaxProvider>
-      <div>
+      <Box sx={{ overflowX: 'hidden', width: '100%' }}>
         {ranges.map((range, index) => {
           const [ref, inView] = useInView({
             threshold: 0.3,
             triggerOnce: true,
+            initialInView: index === 0, // Set to true for the first range
           });
 
           return (
@@ -88,7 +89,7 @@ function ShootingRanges() {
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'flex-end',
-                  padding: '0 10%',
+                  padding: { xs: '0 5%', md: '0 10%' },
                   color: '#F0EED6',
                   transition: 'all 0.3s ease-in-out',
                   '&:hover': {
@@ -108,8 +109,6 @@ function ShootingRanges() {
                     backgroundColor: 'rgba(0,0,0,0.2)',
                   },
                 }}
-                onMouseEnter={() => setActiveRange(index)}
-                onMouseLeave={() => setActiveRange(null)}
               >
                 <motion.div
                   initial={{ opacity: 0, y: 50 }}
@@ -122,8 +121,8 @@ function ShootingRanges() {
                       backgroundColor: 'rgba(0, 0, 0, 0.6)',
                       padding: '30px',
                       borderRadius: '8px',
-                      width: { xs: '80vw', md: '40vw' },
-                      maxWidth: '500px',
+                      width: '100%',
+                      maxWidth: { xs: '90%', md: '500px' },
                       textAlign: range.textAlign,
                       transform: activeRange === index ? 'translateY(-10px)' : 'translateY(0)',
                       transition: 'all 0.3s ease-in-out',
@@ -214,7 +213,7 @@ function ShootingRanges() {
             </Parallax>
           );
         })}
-      </div>
+      </Box>
     </ParallaxProvider>
   );
 }

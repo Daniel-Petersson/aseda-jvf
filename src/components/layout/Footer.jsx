@@ -13,23 +13,28 @@ const Footer = () => {
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
   return (
-    <Box component="footer" sx={{ bgcolor: theme.palette.primary.main, py: { xs: 3, sm: 6 }, color: theme.palette.primary.contrastText }}>
+    <Box component="footer" sx={{ 
+      bgcolor: theme.palette.primary.main, 
+      py: { xs: 2, sm: 3 }, 
+      color: theme.palette.primary.contrastText,
+      fontSize: { xs: '0.8rem', sm: '0.9rem', md: '1rem' }
+    }}>
       <Container maxWidth="lg">
-        <Grid container spacing={isMobile ? 2 : 4}>
+        <Grid container spacing={isMobile ? 1 : 2}>
           <Grid item xs={12} sm={4}>
-            <Typography variant={isMobile ? "h6" : "h5"} gutterBottom>
+            <Typography variant={isMobile ? "subtitle1" : "h6"} gutterBottom>
               ÅSEDA JVF
             </Typography>
-            <Typography variant="subtitle2" color="#F0EED6">
+            <Typography variant="body2" color="#F0EED6">
               Grundad 1954
             </Typography>
           </Grid>
           <Grid item xs={12} sm={4}>
-            <Typography variant={isMobile ? "h6" : "h5"} gutterBottom>
+            <Typography variant={isMobile ? "subtitle1" : "h6"} gutterBottom>
               Hitta hit
             </Typography>
-            <Typography variant="body2" color="#F0EED6" sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-              <LocationOnIcon sx={{ mr: 1, fontSize: isMobile ? '1rem' : '1.25rem' }} /> 
+            <Typography variant="body2" color="#F0EED6" sx={{ display: 'flex', alignItems: 'center', mb: 0.5 }}>
+              <LocationOnIcon sx={{ mr: 0.5, fontSize: isMobile ? '0.9rem' : '1rem' }} /> 
               Adress: Exempelgatan 123, 123 45 Exempelstad
             </Typography>
             <Typography variant="body2" color="#F0EED6">
@@ -37,26 +42,26 @@ const Footer = () => {
             </Typography>
           </Grid>
           <Grid item xs={12} sm={4}>
-            <Typography variant={isMobile ? "h6" : "h5"} gutterBottom>
+            <Typography variant={isMobile ? "subtitle1" : "h6"} gutterBottom>
               Kontaktinfo
             </Typography>
-            <Typography variant="body2" color="#F0EED6" sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-              <EmailIcon sx={{ mr: 1, fontSize: isMobile ? '1rem' : '1.25rem' }} /> 
+            <Typography variant="body2" color="#F0EED6" sx={{ display: 'flex', alignItems: 'center', mb: 0.5 }}>
+              <EmailIcon sx={{ mr: 0.5, fontSize: isMobile ? '0.9rem' : '1rem' }} /> 
               Email: info@asedajvf.com
             </Typography>
-            <Typography variant="body2" color="#F0EED6" sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-              <PhoneIcon sx={{ mr: 1, fontSize: isMobile ? '1rem' : '1.25rem' }} /> 
+            <Typography variant="body2" color="#F0EED6" sx={{ display: 'flex', alignItems: 'center', mb: 0.5 }}>
+              <PhoneIcon sx={{ mr: 0.5, fontSize: isMobile ? '0.9rem' : '1rem' }} /> 
               Telefon: 012-345 67 89
             </Typography>
-            <Box mt={2}>
-              <Link href="#" color="#F0EED6" sx={{ mr: 2 }}>
-                <FacebookIcon sx={{ fontSize: isMobile ? '1.5rem' : '2rem' }} />
+            <Box mt={1}>
+              <Link href="#" color="#F0EED6" sx={{ mr: 1 }}>
+                <FacebookIcon sx={{ fontSize: isMobile ? '1.2rem' : '1.5rem' }} />
               </Link>
-              <Link href="#" color="#F0EED6" sx={{ mr: 2 }}>
-                <TwitterIcon sx={{ fontSize: isMobile ? '1.5rem' : '2rem' }} />
+              <Link href="#" color="#F0EED6" sx={{ mr: 1 }}>
+                <TwitterIcon sx={{ fontSize: isMobile ? '1.2rem' : '1.5rem' }} />
               </Link>
               <Link href="#" color="#F0EED6">
-                <InstagramIcon sx={{ fontSize: isMobile ? '1.5rem' : '2rem' }} />
+                <InstagramIcon sx={{ fontSize: isMobile ? '1.2rem' : '1.5rem' }} />
               </Link>
             </Box>
           </Grid>
