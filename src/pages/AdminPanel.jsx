@@ -35,9 +35,9 @@ const AdminPanel = () => {
               scrollButtons="auto"
               allowScrollButtonsMobile
             >
-              {isAdmin && <Tab label="Member Management" />}
-              {isAdmin && <Tab label="News Management" />}
-              <Tab label="Shooting Sessions" />
+              {isAdmin && <Tab label="Hantera Medlemmar" />}
+              {isAdmin && <Tab label="Hantera Nyheter" />}
+              <Tab label="Skytte Sessioner" />
             </Tabs>
           </Box>
           <Box sx={{ mt: 2 }}>
