@@ -19,7 +19,7 @@ function Navbar() {
 
   const pages = [
     { name: 'Hem', path: '/' },
-    { name: 'Skjutbanor', subMenu: true },
+    { name: 'Skjutbanor', path: '/shootingRanges' },
     { name: 'Jägarexamen', path: '/jagarExamen' },
     { name: 'Kalender', path: '/calendar' },
     { name: 'Nyheter', path: '/news' },

@@ -19,11 +19,15 @@ import ShootingSession from './components/common/ShootingSession';
 import ProtectedRoute from './components/common/ProtectedRoute';
 import NewsManagement from './components/admin/NewsManagement';
 import MemberManagement from './components/admin/MemberManagement';
+import ShootingRanges from './pages/ShootingRanges';
 import { AuthProvider } from './utils/AuthContext';
+import { Provider } from 'react-redux';
+import store from './store/store';
 
 function App() {
   return (
     <AuthProvider>
+      <Provider store={store}>
       <Router>
         <Layout>
           <Routes>
@@ -44,9 +48,11 @@ function App() {
             <Route path="/shootingSession" element={<ProtectedRoute roles={['ADMIN', 'INSTRUCTOR']} element={<ShootingSession />} />} />
             <Route path="/newsManagement" element={<ProtectedRoute roles={['ADMIN']} element={<NewsManagement />} />} />
             <Route path="/memberManagement" element={<ProtectedRoute roles={['ADMIN']} element={<MemberManagement />} />} />
+            <Route path="/shootingRanges" element={<ShootingRanges />} />
           </Routes>
         </Layout>
-      </Router>
+        </Router>
+      </Provider>
     </AuthProvider>
   );
 }

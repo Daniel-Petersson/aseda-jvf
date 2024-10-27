@@ -33,8 +33,10 @@ export const AuthProvider = ({ children }) => {
     setUser(null);
   };
 
+  const getToken = () => cookies.token;
+
   return (
-    <AuthContext.Provider value={{ user, login, logout }}>
+    <AuthContext.Provider value={{ user, login, logout, getToken }}>
       {children}
     </AuthContext.Provider>
   );

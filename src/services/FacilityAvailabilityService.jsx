@@ -46,13 +46,16 @@ export const deleteAvailability = async (id) => {
 
 export const getAvailabilityByFacility = async (facilityId) => {
     try {
+        if (!facilityId) {
+            throw new Error("Facility ID is required");
+        }
         const response = await axios.get(`${REST_API_FACILITY_AVAILABILITY_URL}${facilityId}`);
         return { success: true, data: response.data };
     } catch (error) {
         console.error("Error fetching facility availability:", error);
         return { 
             success: false, 
-            error: error.response?.data?.message || "An error occurred while fetching facility availability.",
+            error: error.response?.data?.message || error.message || "An error occurred while fetching facility availability.",
             status: error.response?.status || 500
         };
     }
