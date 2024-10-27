@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useContext } from 'react';
-import { Modal, Box, Typography, Button, TextField, Select, MenuItem, FormControl, InputLabel } from '@mui/material';
+import { Modal, Box, Typography, Button, TextField, Select, MenuItem, FormControl, InputLabel, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle } from '@mui/material';
 import * as OpeningHoursService from '../../services/OpeningHoursService';
 import * as InstructorScheduleService from '../../services/InstructorScheduleService';
 import * as FacilityService from '../../services/FacilityService';
@@ -7,7 +7,8 @@ import * as BookingService from '../../services/BookingService';
 import * as MemberService from '../../services/MemberService';
 import { AuthContext } from '../../utils/AuthContext';
 
-const EventDetailsModal = ({ isOpen, onClose, event, onEventUpdate, onEventCreate, onEventDelete, isCreating, userRole, isAuthenticated, user }) => {
+const EventDetailsModal = ({ isOpen, onClose, event, onEventUpdate, onEventCreate, onEventDelete, isCreating }) => {
+  const { user, getToken } = useContext(AuthContext);
   const [editedEvent, setEditedEvent] = useState(event);
   const [facilities, setFacilities] = useState([]);
   const [isEditing, setIsEditing] = useState(isCreating);
@@ -15,6 +16,8 @@ const EventDetailsModal = ({ isOpen, onClose, event, onEventUpdate, onEventCreat
   const [instructors, setInstructors] = useState([]);
   const [filteredMembers, setFilteredMembers] = useState([]);
   const [filteredInstructors, setFilteredInstructors] = useState([]);
+  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
+  const [eventToDelete, setEventToDelete] = useState(null);
 
   useEffect(() => {
     if (isCreating) {
@@ -87,27 +90,28 @@ const EventDetailsModal = ({ isOpen, onClose, event, onEventUpdate, onEventCreat
   const handleSave = async () => {
     if (validateForm()) {
       let response;
+      const token = getToken();
       if (isCreating) {
         if (editedEvent.type === 'booking') {
           const bookingData = {
             ...editedEvent,
             memberId: user.memberId
           };
-          response = await BookingService.createBooking(bookingData);
+          response = await BookingService.createBooking(bookingData, token);
         } else if (editedEvent.type === 'openingHours') {
-          response = await OpeningHoursService.createOpeningHours(editedEvent);
+          response = await OpeningHoursService.createOpeningHours(editedEvent, token);
         } else if (editedEvent.type === 'instructorSchedule') {
           console.log('Creating instructor schedule with data:', editedEvent);
-          response = await InstructorScheduleService.createSchedule(editedEvent);
+          response = await InstructorScheduleService.createSchedule(editedEvent, token);
         }
       } else {
         if (editedEvent.type === 'booking') {
-          response = await BookingService.updateBooking(editedEvent.id, editedEvent, user.token);
+          response = await BookingService.updateBooking(editedEvent.id, editedEvent, token);
         } else if (editedEvent.type === 'openingHours') {
-          response = await OpeningHoursService.updateOpeningHours(editedEvent.id, editedEvent);
+          response = await OpeningHoursService.updateOpeningHours(editedEvent.id, editedEvent, token);
         } else if (editedEvent.type === 'instructorSchedule') {
           console.log('Updating instructor schedule with data:', editedEvent);
-          response = await InstructorScheduleService.updateSchedule(editedEvent.id, editedEvent);
+          response = await InstructorScheduleService.updateSchedule(editedEvent.id, editedEvent, token);
         }
       }
 
@@ -170,77 +174,45 @@ const EventDetailsModal = ({ isOpen, onClose, event, onEventUpdate, onEventCreat
     return Object.values(tempErrors).every(x => x === "");
   };
 
-  const handleDelete = async () => {
-    console.log('Attempting to delete event:', editedEvent);
-    console.log('Event ID:', editedEvent.id);
-    console.log('Event type:', editedEvent.type);
+  const handleDeleteClick = () => {
+    setEventToDelete(editedEvent);
+    setIsDeleteConfirmOpen(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    setIsDeleteConfirmOpen(false);
+    if (eventToDelete) {
+      await handleDelete(eventToDelete);
+    }
+  };
+
+  const handleDeleteCancel = () => {
+    setIsDeleteConfirmOpen(false);
+    setEventToDelete(null);
+  };
+
+  const handleDelete = async (eventToDelete) => {
+    console.log('Attempting to delete event:', eventToDelete);
+    console.log('Event ID:', eventToDelete.id);
+    console.log('Event type:', eventToDelete.type);
     console.log('User role:', userRole);
 
-    if (editedEvent.type === 'openingHours' && userRole === 'ADMIN') {
-      try {
-        console.log('Deleting opening hours with id:', editedEvent.id);
-        if (!editedEvent.id) {
-          console.error('Opening hours id is undefined');
-          setErrors({ submit: 'Invalid opening hours id' });
-          return;
-        }
-        const response = await OpeningHoursService.deleteOpeningHours(editedEvent.id);
-        console.log('Delete opening hours response:', response);
-        if (response.success) {
-          onEventDelete(editedEvent);
-          onClose();
-        } else {
-          setErrors({ submit: response.error });
-        }
-      } catch (error) {
-        console.error('Error deleting opening hours:', error);
-        setErrors({ submit: 'Failed to delete opening hours' });
-      }
-    } else if (editedEvent.type === 'booking' && userRole === 'ADMIN') {
-      try {
-        console.log('Deleting booking with id:', editedEvent.id);
-        if (!editedEvent.id) {
-          console.error('Booking id is undefined');
-          setErrors({ submit: 'Invalid booking id' });
-          return;
-        }
-        if (!user || !user.token) {
-          console.error('User token is missing');
-          setErrors({ submit: 'User authentication failed' });
-          return;
-        }
-        const response = await BookingService.deleteBooking(editedEvent.id, user.token);
-        console.log('Delete booking response:', response);
-        if (response.success) {
-          onEventDelete(editedEvent);
-          onClose();
-        } else {
-          setErrors({ submit: response.error });
-        }
-      } catch (error) {
-        console.error('Error deleting booking:', error);
-        setErrors({ submit: 'Failed to delete booking' });
-      }
-    } else if (editedEvent.type === 'instructorSchedule' && userRole === 'ADMIN') {
-      try {
-        console.log('Deleting instructor schedule with id:', editedEvent.id);
-        if (!editedEvent.id) {
-          console.error('Instructor schedule id is undefined');
-          setErrors({ submit: 'Invalid instructor schedule id' });
-          return;
-        }
-        const response = await InstructorScheduleService.deleteSchedule(editedEvent.id);
-        console.log('Delete instructor schedule response:', response);
-        if (response.success) {
-          onEventDelete(editedEvent);
-          onClose();
-        } else {
-          setErrors({ submit: response.error });
-        }
-      } catch (error) {
-        console.error('Error deleting instructor schedule:', error);
-        setErrors({ submit: 'Failed to delete instructor schedule' });
-      }
+    const token = getToken();
+    console.log('User token:', token);
+
+    let response;
+    if (eventToDelete.type === 'booking') {
+      response = await BookingService.deleteBooking(eventToDelete.id, token);
+    } else if (eventToDelete.type === 'openingHours') {
+      response = await OpeningHoursService.deleteOpeningHours(eventToDelete.id);
+    }
+
+    console.log(`Delete ${eventToDelete.type} response:`, response);
+    if (response.success) {
+      onEventDelete(eventToDelete);
+      onClose();
+    } else {
+      setErrors({ submit: response.error });
     }
   };
 
@@ -436,38 +408,50 @@ const EventDetailsModal = ({ isOpen, onClose, event, onEventUpdate, onEventCreat
     }
   };
 
-  const canEdit = userRole === 'ADMIN' || 
-                  (userRole === 'INSTRUCTOR' && event.type === 'booking') || 
-                  (userRole === 'USER' && event.type === 'booking' && event.memberId === event.userId);
+  const canEdit = user && (user.role === 'ADMIN' || 
+                (user.role === 'INSTRUCTOR' && event.type === 'booking') || 
+                (user.role === 'USER' && event.type === 'booking' && event.memberId === user.memberId));
 
-  const canDelete = userRole === 'ADMIN';
+  const canDelete = user && (user.role === 'ADMIN' || 
+                  (user.role === 'USER' && event.type === 'booking' && event.memberId === user.memberId));
 
   return (
     <Modal open={isOpen} onClose={onClose}>
-      <Box sx={{
-        position: 'absolute',
-        top: '50%',
-        left: '50%',
-        transform: 'translate(-50%, -50%)',
-        width: 400,
-        bgcolor: 'background.paper',
-        boxShadow: 24,
-        p: 4,
-      }}>
+      <Box sx={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: 400, bgcolor: 'background.paper', boxShadow: 24, p: 4 }}>
         {renderEventDetails()}
-        {canEdit && !isEditing && (
-          <Button onClick={handleEdit} sx={{ mt: 2, mr: 2 }}>Redigera</Button>
-        )}
-        {isEditing && (
+        {isEditing || isCreating ? (
           <>
-            <Button onClick={handleSave} sx={{ mt: 2, mr: 2 }}>Spara</Button>
-            <Button onClick={handleCancel} sx={{ mt: 2, mr: 2 }}>Avbryt</Button>
+            <Button onClick={handleSave} sx={{ mt: 2, mr: 1 }}>Spara</Button>
+            <Button onClick={handleCancel} sx={{ mt: 2 }}>Avbryt</Button>
+          </>
+        ) : (
+          <>
+            {canEdit && <Button onClick={handleEdit} sx={{ mt: 2, mr: 1 }}>Redigera</Button>}
+            {canDelete && <Button onClick={handleDeleteClick} sx={{ mt: 2, mr: 1 }}>Ta bort</Button>}
+            <Button onClick={onClose} sx={{ mt: 2 }}>Stäng</Button>
           </>
         )}
-        {canDelete && !isEditing && !isCreating && (
-          <Button onClick={handleDelete} sx={{ mt: 2, mr: 2 }} color="error">Ta bort</Button>
-        )}
-        <Button onClick={onClose} sx={{ mt: 2 }}>Stäng</Button>
+        <Dialog
+          open={isDeleteConfirmOpen}
+          onClose={handleDeleteCancel}
+          aria-labelledby="alert-dialog-title"
+          aria-describedby="alert-dialog-description"
+        >
+          <DialogTitle id="alert-dialog-title">{"Ta bort event?"}</DialogTitle>
+          <DialogContent>
+            <DialogContentText id="alert-dialog-description">
+              Är du säker på att du vill ta bort detta event?
+            </DialogContentText>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={handleDeleteCancel} color="primary">
+              Avbryt
+            </Button>
+            <Button onClick={handleDeleteConfirm} color="primary" autoFocus>
+              Ta bort
+            </Button>
+          </DialogActions>
+        </Dialog>
       </Box>
     </Modal>
   );

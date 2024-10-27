@@ -82,6 +82,7 @@ export const deleteBooking = async (bookingId, token) => {
     return { success: true, data: response.data };
   } catch (error) {
     console.error('Error deleting booking:', error);
+    console.error('Error response:', error.response ? JSON.stringify(error.response.data, null, 2) : 'No response data');
     return handleErrorResponse(error);
   }
 };

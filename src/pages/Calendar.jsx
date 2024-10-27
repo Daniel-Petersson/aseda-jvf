@@ -280,33 +280,31 @@ const Calendar = () => {
     }
   };
 
-  const handleEventDelete = async (eventToDelete) => {
-    try {
-      let response;
-      switch (eventToDelete.type) {
-        case 'booking':
-          response = await BookingService.deleteBooking(eventToDelete.id, user.token);
-          break;
-        case 'openingHours':
-          // Use the actualId from extendedProps for deletion
-          response = await OpeningHoursService.deleteOpeningHours(eventToDelete.extendedProps.actualId);
-          break;
-        case 'instructorSchedule':
-          response = await InstructorScheduleService.deleteSchedule(eventToDelete.id);
-          break;
-        default:
-          throw new Error('Invalid event type');
-      }
+  const handleEventDelete = async (deletedEvent) => {
+    // Remove the deleted event from the state
+    setEvents(prevEvents => prevEvents.filter(event => event.id !== deletedEvent.id));
 
-      if (response.success) {
-        setEvents(prevEvents => prevEvents.filter(event => event.id !== eventToDelete.id));
-        alert('Event deleted successfully');
+    // Refresh the calendar data
+    await fetchCalendarData();
+  };
+
+  const fetchCalendarData = async () => {
+    try {
+      const bookingsResponse = await BookingService.getAllBookings();
+      const openingHoursResponse = await OpeningHoursService.getAllOpeningHours();
+      const instructorSchedulesResponse = await InstructorScheduleService.getAllSchedules();
+
+      if (bookingsResponse.success && openingHoursResponse.success && instructorSchedulesResponse.success) {
+        const formattedBookings = await formatBookings(bookingsResponse.data);
+        const formattedOpeningHours = await formatOpeningHours(openingHoursResponse.data);
+        const formattedInstructorSchedules = await formatInstructorSchedules(instructorSchedulesResponse.data);
+
+        setEvents([...formattedBookings, ...formattedOpeningHours, ...formattedInstructorSchedules]);
       } else {
-        alert(`Error deleting event: ${response.error}`);
+        console.error('Error fetching calendar data');
       }
     } catch (error) {
-      console.error('Error deleting event:', error);
-      alert('An unexpected error occurred while deleting the event.');
+      console.error('Error fetching calendar data:', error);
     }
   };
 
@@ -389,9 +387,6 @@ const Calendar = () => {
         onEventCreate={handleEventCreate}
         onEventDelete={handleEventDelete}
         isCreating={isCreating}
-        userRole={user ? user.role : null}
-        isAuthenticated={!!user}
-        user={user} // Make sure this includes the token
       />
       <Button
         variant="contained"
@@ -408,12 +403,10 @@ const Calendar = () => {
         onClose={handleMenuClose}
       >
         <MenuItem onClick={() => { handleCreateBooking(); handleMenuClose(); }}>Bokning</MenuItem>
-        {user && user.role === 'ADMIN' && (
-          <>
-            <MenuItem onClick={() => { handleCreateOpeningHours(); handleMenuClose(); }}>Öppettider</MenuItem>
-            <MenuItem onClick={() => { handleCreateInstructorSchedule(); handleMenuClose(); }}>Instruktörsschema</MenuItem>
-          </>
-        )}
+        {user && user.role === 'ADMIN' && [
+          <MenuItem key="openingHours" onClick={() => { handleCreateOpeningHours(); handleMenuClose(); }}>Öppettider</MenuItem>,
+          <MenuItem key="instructorSchedule" onClick={() => { handleCreateInstructorSchedule(); handleMenuClose(); }}>Instruktörsschema</MenuItem>
+        ]}
       </Menu>
     </Box>
   );
