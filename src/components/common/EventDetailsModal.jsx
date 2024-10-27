@@ -6,6 +6,10 @@ import * as FacilityService from '../../services/FacilityService';
 import * as BookingService from '../../services/BookingService';
 import * as MemberService from '../../services/MemberService';
 import { AuthContext } from '../../utils/AuthContext';
+import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
+import { sv } from 'date-fns/locale';
 
 const EventDetailsModal = ({ isOpen, onClose, event, onEventUpdate, onEventCreate, onEventDelete, isCreating }) => {
   const { user, getToken } = useContext(AuthContext);
@@ -97,30 +101,25 @@ const EventDetailsModal = ({ isOpen, onClose, event, onEventUpdate, onEventCreat
             ...editedEvent,
             memberId: user.memberId
           };
-          response = await BookingService.createBooking(bookingData, token);
+          response = await onEventCreate(bookingData);
         } else if (editedEvent.type === 'openingHours') {
-          response = await OpeningHoursService.createOpeningHours(editedEvent, token);
+          response = await onEventCreate(editedEvent);
         } else if (editedEvent.type === 'instructorSchedule') {
-          console.log('Creating instructor schedule with data:', editedEvent);
-          response = await InstructorScheduleService.createSchedule(editedEvent, token);
+          response = await onEventCreate(editedEvent);
         }
       } else {
         if (editedEvent.type === 'booking') {
-          response = await BookingService.updateBooking(editedEvent.id, editedEvent, token);
+          response = await onEventUpdate(editedEvent);
         } else if (editedEvent.type === 'openingHours') {
           response = await OpeningHoursService.updateOpeningHours(editedEvent.id, editedEvent, token);
         } else if (editedEvent.type === 'instructorSchedule') {
-          console.log('Updating instructor schedule with data:', editedEvent);
           response = await InstructorScheduleService.updateSchedule(editedEvent.id, editedEvent, token);
         }
       }
 
-      console.log('Save response:', response);
-
       if (response.success) {
-        onEventUpdate(editedEvent);
-        setIsEditing(false);
         onClose();
+        setIsEditing(false);
       } else {
         setErrors({ submit: response.error });
       }
@@ -130,11 +129,16 @@ const EventDetailsModal = ({ isOpen, onClose, event, onEventUpdate, onEventCreat
   const handleCancel = () => {
     setIsEditing(false);
     setEditedEvent(event);
+    onClose();
   };
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setEditedEvent(prev => ({ ...prev, [name]: value }));
+    if (name === 'startTime' || name === 'endTime') {
+      setEditedEvent(prev => ({ ...prev, [name]: value ? value.toISOString() : null }));
+    } else {
+      setEditedEvent(prev => ({ ...prev, [name]: value }));
+    }
   };
 
   const validateForm = () => {
@@ -195,7 +199,7 @@ const EventDetailsModal = ({ isOpen, onClose, event, onEventUpdate, onEventCreat
     console.log('Attempting to delete event:', eventToDelete);
     console.log('Event ID:', eventToDelete.id);
     console.log('Event type:', eventToDelete.type);
-    console.log('User role:', userRole);
+    console.log('User role:', user?.role);
 
     const token = getToken();
     console.log('User token:', token);
@@ -235,35 +239,77 @@ const EventDetailsModal = ({ isOpen, onClose, event, onEventUpdate, onEventCreat
               <FormControl fullWidth margin="normal">
                 <InputLabel>Anläggning</InputLabel>
                 <Select
+                  name="facilityId"
                   value={editedEvent.facilityId || ''}
                   onChange={handleInputChange}
-                  name="facilityId"
+                  label="Anläggning"
                 >
                   {facilities.map(facility => (
                     <MenuItem key={facility.id} value={facility.id}>{facility.name}</MenuItem>
                   ))}
                 </Select>
               </FormControl>
-              <TextField
-                label="Starttid"
-                type="datetime-local"
-                name="startTime"
-                value={editedEvent.startTime ? new Date(editedEvent.startTime).toISOString().slice(0, 16) : ''}
-                onChange={handleInputChange}
-                fullWidth
-                margin="normal"
-                InputLabelProps={{ shrink: true }}
-              />
-              <TextField
-                label="Sluttid"
-                type="datetime-local"
-                name="endTime"
-                value={editedEvent.endTime ? new Date(editedEvent.endTime).toISOString().slice(0, 16) : ''}
-                onChange={handleInputChange}
-                fullWidth
-                margin="normal"
-                InputLabelProps={{ shrink: true }}
-              />
+              <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={sv}>
+                <DateTimePicker
+                  label="Välj datum och tid"
+                  value={editedEvent.startTime ? new Date(editedEvent.startTime) : null}
+                  onChange={(newValue) => handleInputChange({ target: { name: 'startTime', value: newValue } })}
+                  slotProps={{
+                    textField: { fullWidth: true, margin: "normal" },
+                    actionBar: {
+                      actions: ['cancel', 'accept'],
+                      translations: {
+                        cancel: 'Avbryt',
+                        accept: 'Spara',
+                      },
+                    },
+                    desktopPaper: {
+                      sx: {
+                        '& .MuiTypography-root': { fontSize: '1rem' },
+                        '& .MuiPickersDay-root': { fontSize: '1rem' },
+                        '& .MuiClock-squareMask': { transform: 'scale(0.9)' },
+                        '& .MuiDateTimePickerToolbar-dateContainer': {
+                          display: 'flex',
+                          alignItems: 'baseline',
+                          '& > *': { marginRight: '8px', fontSize: '1rem' }
+                        },
+                        '& .MuiDateTimePickerToolbar-timeContainer': {
+                          display: 'flex',
+                          alignItems: 'baseline',
+                          '& > *': { marginRight: '8px', fontSize: '1rem' }
+                        }
+                      }
+                    }
+                  }}
+                  format="d MMM yyyy HH:mm"
+                />
+                <DateTimePicker
+                  label="Sluttid"
+                  value={editedEvent.endTime ? new Date(editedEvent.endTime) : null}
+                  onChange={(newValue) => handleInputChange({ target: { name: 'endTime', value: newValue } })}
+                  slotProps={{
+                    textField: { fullWidth: true, margin: "normal" },
+                    desktopPaper: {
+                      sx: {
+                        '& .MuiTypography-root': { fontSize: '1rem' },
+                        '& .MuiPickersDay-root': { fontSize: '1rem' },
+                        '& .MuiClock-squareMask': { transform: 'scale(0.9)' },
+                        '& .MuiDateTimePickerToolbar-dateContainer': {
+                          display: 'flex',
+                          alignItems: 'baseline',
+                          '& > *': { marginRight: '8px' }
+                        },
+                        '& .MuiDateTimePickerToolbar-timeContainer': {
+                          display: 'flex',
+                          alignItems: 'baseline',
+                          '& > *': { marginRight: '8px' }
+                        }
+                      }
+                    }
+                  }}
+                  format="d MMM yyyy HH:mm"
+                />
+              </LocalizationProvider>
             </>
           );
         case 'openingHours':
@@ -275,6 +321,7 @@ const EventDetailsModal = ({ isOpen, onClose, event, onEventUpdate, onEventCreat
                   name="facilityId"
                   value={editedEvent.facilityId || ''}
                   onChange={handleInputChange}
+                  label="Anläggning"
                 >
                   {facilities.map(facility => (
                     <MenuItem key={facility.id} value={facility.id}>{facility.name}</MenuItem>
@@ -307,6 +354,7 @@ const EventDetailsModal = ({ isOpen, onClose, event, onEventUpdate, onEventCreat
                   name="assignedLeaderId"
                   value={editedEvent.assignedLeaderId || ''}
                   onChange={handleInputChange}
+                  label="Ansvarig ledare"
                 >
                   <MenuItem value="">Ingen ansvarig ledare</MenuItem>
                   {filteredMembers.map(member => (
@@ -325,6 +373,7 @@ const EventDetailsModal = ({ isOpen, onClose, event, onEventUpdate, onEventCreat
                   name="facilityId"
                   value={editedEvent.facilityId || ''}
                   onChange={handleInputChange}
+                  label="Anläggning"
                 >
                   {facilities.map(facility => (
                     <MenuItem key={facility.id} value={facility.id}>{facility.name}</MenuItem>
@@ -414,6 +463,25 @@ const EventDetailsModal = ({ isOpen, onClose, event, onEventUpdate, onEventCreat
 
   const canDelete = user && (user.role === 'ADMIN' || 
                   (user.role === 'USER' && event.type === 'booking' && event.memberId === user.memberId));
+
+  const renderDateTimePickerInput = (props) => {
+    const { inputRef, inputProps, InputProps, ...other } = props;
+    return (
+      <TextField
+        {...other}
+        inputRef={inputRef}
+        InputProps={{
+          ...InputProps,
+          endAdornment: (
+            <>
+              {InputProps?.endAdornment}
+              <Button onClick={() => props.onClose()}>Stäng</Button>
+            </>
+          ),
+        }}
+      />
+    );
+  };
 
   return (
     <Modal open={isOpen} onClose={onClose}>

@@ -30,32 +30,18 @@ export const getBooking = async (id) => {
   }
 };
 
-export const createBooking = async (bookingData) => {
+export const createBooking = async (bookingData, token) => {
   try {
-    const { title, facilityId, memberId, startTime, endTime } = bookingData;
-    if (!title || !facilityId || !memberId || !startTime || !endTime) {
-      throw new Error('All fields are required: title, facilityId, memberId, startTime, endTime');
-    }
-    console.log('Creating booking with data:', JSON.stringify(bookingData, null, 2));
-    const response = await axios.post(API_URL, {
-      title,
-      facilityId,
-      memberId,
-      startTime,
-      endTime
+    const response = await axios.post(API_URL, bookingData, {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
     });
-    console.log('Full server response:', JSON.stringify(response, null, 2));
-    console.log('Booking creation response data:', JSON.stringify(response.data, null, 2));
     return { success: true, data: response.data };
   } catch (error) {
     console.error('Error creating booking:', error);
     console.error('Error response:', error.response ? JSON.stringify(error.response.data, null, 2) : 'No response data');
-    return {
-      success: false,
-      error: error.response?.data?.message || error.message || 'An unexpected error occurred while creating the booking.',
-      status: error.response?.status || 500,
-      details: error.response?.data || error
-    };
+    return handleErrorResponse(error);
   }
 };
 
@@ -108,4 +94,3 @@ const handleErrorResponse = (error) => {
     };
   }
 };
-

@@ -15,11 +15,16 @@ import * as MemberService from '../services/MemberService';
 import AddIcon from '@mui/icons-material/Add';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
+import Dialog from '@mui/material/Dialog';
+import DialogActions from '@mui/material/DialogActions';
+import DialogContent from '@mui/material/DialogContent';
+import DialogContentText from '@mui/material/DialogContentText';
+import DialogTitle from '@mui/material/DialogTitle';
 
 
 const Calendar = () => {
   const [events, setEvents] = useState([]);
-  const { user } = useContext(AuthContext);
+  const { user, getToken } = useContext(AuthContext);
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const [selectedEvent, setSelectedEvent] = useState(null);
@@ -28,6 +33,8 @@ const Calendar = () => {
   const [anchorEl, setAnchorEl] = useState(null);
   const [currentDate, setCurrentDate] = useState(new Date());
   const calendarRef = useRef(null);
+  const [isErrorDialogOpen, setIsErrorDialogOpen] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
 
   console.log('User object:', user);
   console.log('User role:', user?.role);
@@ -71,7 +78,7 @@ const Calendar = () => {
       const facilityResponse = await FacilityService.getFacilityById(booking.facilityId);
       return {
         id: booking.id,
-        title: `Bokning: ${booking.title}`,
+        title: booking.title,
         start: booking.startTime,
         end: booking.endTime,
         backgroundColor: 'rgba(93, 102, 81, 0.2)',
@@ -241,70 +248,76 @@ const Calendar = () => {
   };
 
   const handleEventUpdate = async (updatedEvent) => {
-    if (updatedEvent.type === 'booking' && user.role === 'ADMIN') {
-      const response = await BookingService.updateBooking(updatedEvent.id, updatedEvent, user.token);
+    const token = getToken();
+    let response;
+
+    try {
+      if (updatedEvent.type === 'booking' && updatedEvent.title.startsWith('Bokning: ')) {
+        updatedEvent.title = updatedEvent.title.replace('Bokning: ', '');
+      }
+      if (updatedEvent.type === 'booking') {
+        response = await BookingService.updateBooking(updatedEvent.id, updatedEvent, token);
+      } else if (updatedEvent.type === 'openingHours') {
+        response = await OpeningHoursService.updateOpeningHours(updatedEvent.id, updatedEvent, token);
+      } else if (updatedEvent.type === 'instructorSchedule') {
+        response = await InstructorScheduleService.updateSchedule(updatedEvent.id, updatedEvent, token);
+      }
+
       if (response.success) {
         setEvents(prevEvents => prevEvents.map(event => 
           event.id === updatedEvent.id ? { ...event, ...response.data } : event
         ));
         setIsModalOpen(false);
       } else {
-        console.error('Error updating booking:', response.error);
-        alert(`Error updating booking: ${response.error}`);
+        setErrorMessage(response.error || 'Ett oväntat fel inträffade vid uppdatering av eventet.');
+        setIsErrorDialogOpen(true);
       }
-    } else {
-      // Handle other event types if necessary
-      setEvents(prevEvents => prevEvents.map(event => 
-        event.id === updatedEvent.id ? { ...event, ...updatedEvent } : event
-      ));
-      setIsModalOpen(false);
+    } catch (error) {
+      console.error('Error updating event:', error);
+      setErrorMessage('Ett oväntat fel inträffade. Vänligen försök igen.');
+      setIsErrorDialogOpen(true);
     }
+
     await fetchAllEvents(); // Refresh all events
   };
 
   const handleEventCreate = async (newEvent) => {
     try {
-      const response = await BookingService.createBooking(newEvent);
+      const token = getToken();
+      let response;
+      if (newEvent.type === 'booking') {
+        response = await BookingService.createBooking(newEvent, token);
+      } else if (newEvent.type === 'openingHours') {
+        response = await OpeningHoursService.createOpeningHours(newEvent, token);
+      } else if (newEvent.type === 'instructorSchedule') {
+        response = await InstructorScheduleService.createSchedule(newEvent, token);
+      }
+
       if (response.success) {
         await fetchAllEvents(); // Refresh all events
         setIsModalOpen(false);
         setIsCreating(false);
       } else {
-        console.error('Error creating booking:', response.error);
-        console.error('Error details:', response.details);
-        alert(`Error creating booking: ${response.error}`);
+        setErrorMessage(response.error || 'Ett ovntat fel inträffade vid skapande av eventet.');
+        setIsErrorDialogOpen(true);
       }
     } catch (error) {
-      console.error('Unexpected error creating booking:', error);
-      alert('An unexpected error occurred while creating the booking.');
+      console.error('Unexpected error creating event:', error);
+      setErrorMessage('Ett oväntat fel inträffade. Vänligen försök igen.');
+      setIsErrorDialogOpen(true);
     }
   };
 
   const handleEventDelete = async (deletedEvent) => {
-    // Remove the deleted event from the state
-    setEvents(prevEvents => prevEvents.filter(event => event.id !== deletedEvent.id));
-
-    // Refresh the calendar data
-    await fetchCalendarData();
-  };
-
-  const fetchCalendarData = async () => {
     try {
-      const bookingsResponse = await BookingService.getAllBookings();
-      const openingHoursResponse = await OpeningHoursService.getAllOpeningHours();
-      const instructorSchedulesResponse = await InstructorScheduleService.getAllSchedules();
+      // Remove the deleted event from the state
+      setEvents(prevEvents => prevEvents.filter(event => event.id !== deletedEvent.id));
 
-      if (bookingsResponse.success && openingHoursResponse.success && instructorSchedulesResponse.success) {
-        const formattedBookings = await formatBookings(bookingsResponse.data);
-        const formattedOpeningHours = await formatOpeningHours(openingHoursResponse.data);
-        const formattedInstructorSchedules = await formatInstructorSchedules(instructorSchedulesResponse.data);
-
-        setEvents([...formattedBookings, ...formattedOpeningHours, ...formattedInstructorSchedules]);
-      } else {
-        console.error('Error fetching calendar data');
-      }
+      // Refresh all events
+      await fetchAllEvents();
     } catch (error) {
-      console.error('Error fetching calendar data:', error);
+      console.error('Error deleting event:', error);
+      alert('Ett fel uppstod vid borttagning av eventet. Vänligen försök igen.');
     }
   };
 
@@ -318,6 +331,11 @@ const Calendar = () => {
 
   const handleDatesSet = (dateInfo) => {
     setCurrentDate(dateInfo.view.currentStart);
+  };
+
+  const handleErrorDialogClose = () => {
+    setIsErrorDialogOpen(false);
+    setErrorMessage('');
   };
 
   return (
@@ -408,6 +426,24 @@ const Calendar = () => {
           <MenuItem key="instructorSchedule" onClick={() => { handleCreateInstructorSchedule(); handleMenuClose(); }}>Instruktörsschema</MenuItem>
         ]}
       </Menu>
+      <Dialog
+        open={isErrorDialogOpen}
+        onClose={handleErrorDialogClose}
+        aria-labelledby="error-dialog-title"
+        aria-describedby="error-dialog-description"
+      >
+        <DialogTitle id="error-dialog-title">{"Fel vid skapande av bokning"}</DialogTitle>
+        <DialogContent>
+          <DialogContentText id="error-dialog-description">
+            {errorMessage}
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleErrorDialogClose} color="primary">
+            Stäng
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 };
