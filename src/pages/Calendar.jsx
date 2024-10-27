@@ -36,8 +36,6 @@ const Calendar = () => {
   const [isErrorDialogOpen, setIsErrorDialogOpen] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
 
-  console.log('User object:', user);
-  console.log('User role:', user?.role);
 
   useEffect(() => {
     fetchAllEvents();
@@ -45,17 +43,11 @@ const Calendar = () => {
 
   const fetchAllEvents = async () => {
     try {
-      console.log('Fetching all events...');
       const [bookingsResponse, openingHoursResponse, instructorSchedulesResponse] = await Promise.all([
         BookingService.getAllBookings(),
         OpeningHoursService.getAllOpeningHours(),
         InstructorScheduleService.getAllSchedules()
       ]);
-
-      console.log('Bookings response:', bookingsResponse);
-      console.log('Opening hours response:', openingHoursResponse);
-      console.log('Instructor schedules response:', instructorSchedulesResponse);
-
       const formattedBookings = await formatBookings(bookingsResponse);
       const formattedOpeningHours = await formatOpeningHours(openingHoursResponse.data);
       const formattedInstructorSchedules = await formatInstructorSchedules(instructorSchedulesResponse.data);
@@ -66,7 +58,6 @@ const Calendar = () => {
         ...formattedInstructorSchedules
       ];
 
-      console.log('Formatted events:', formattedEvents);
       setEvents(formattedEvents);
     } catch (error) {
       console.error('Error fetching events:', error);
@@ -222,11 +213,12 @@ const Calendar = () => {
 
   const handleCreateOpeningHours = () => {
     if (user && user.role === 'ADMIN') {
+      const now = new Date();
       setSelectedEvent({
         type: 'openingHours',
         title: 'Nya öppettider',
-        openingTime: new Date(),
-        closingTime: new Date(new Date().getTime() + 8 * 60 * 60 * 1000), // 8 hours from now
+        openingTime: now,
+        closingTime: new Date(now.getTime() + 8 * 60 * 60 * 1000), // 8 hours from now
       });
       setIsCreating(true);
       setIsModalOpen(true);
@@ -236,12 +228,13 @@ const Calendar = () => {
   };
 
   const handleCreateInstructorSchedule = () => {
+    const now = new Date();
     setSelectedEvent({
       type: 'instructorSchedule',
       instructorId: '',
       facilityId: '',
-      startTime: '',
-      endTime: ''
+      startTime: now,
+      endTime: new Date(now.getTime() + 60 * 60 * 1000) // 1 hour from now
     });
     setIsCreating(true);
     setIsModalOpen(true);
@@ -298,7 +291,7 @@ const Calendar = () => {
         setIsModalOpen(false);
         setIsCreating(false);
       } else {
-        setErrorMessage(response.error || 'Ett ovntat fel inträffade vid skapande av eventet.');
+        setErrorMessage(response.error || 'Ett ovnntat fel inträffade vid skapande av eventet.');
         setIsErrorDialogOpen(true);
       }
     } catch (error) {

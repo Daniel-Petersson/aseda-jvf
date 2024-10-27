@@ -224,6 +224,45 @@ const EventDetailsModal = ({ isOpen, onClose, event, onEventUpdate, onEventCreat
     if (!editedEvent) return null;
 
     if (isEditing || isCreating) {
+      const commonFields = (
+        <>
+          <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={sv}>
+            <DateTimePicker
+              label="Starttid"
+              value={editedEvent.startTime ? new Date(editedEvent.startTime) : new Date()}
+              onChange={(newValue) => handleInputChange({ target: { name: 'startTime', value: newValue } })}
+              slotProps={{
+                textField: { fullWidth: true, margin: "normal" },
+                actionBar: {
+                  actions: ['cancel', 'accept'],
+                  translations: {
+                    cancel: 'Avbryt',
+                    accept: 'Spara',
+                  },
+                },
+              }}
+              format="d MMM yyyy HH:mm"
+            />
+            <DateTimePicker
+              label="Sluttid"
+              value={editedEvent.endTime ? new Date(editedEvent.endTime) : new Date(new Date().getTime() + 60 * 60 * 1000)}
+              onChange={(newValue) => handleInputChange({ target: { name: 'endTime', value: newValue } })}
+              slotProps={{
+                textField: { fullWidth: true, margin: "normal" },
+                actionBar: {
+                  actions: ['cancel', 'accept'],
+                  translations: {
+                    cancel: 'Avbryt',
+                    accept: 'Spara',
+                  },
+                },
+              }}
+              format="d MMM yyyy HH:mm"
+            />
+          </LocalizationProvider>
+        </>
+      );
+
       switch (editedEvent.type) {
         case 'booking':
           return (
@@ -249,67 +288,7 @@ const EventDetailsModal = ({ isOpen, onClose, event, onEventUpdate, onEventCreat
                   ))}
                 </Select>
               </FormControl>
-              <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={sv}>
-                <DateTimePicker
-                  label="Välj datum och tid"
-                  value={editedEvent.startTime ? new Date(editedEvent.startTime) : null}
-                  onChange={(newValue) => handleInputChange({ target: { name: 'startTime', value: newValue } })}
-                  slotProps={{
-                    textField: { fullWidth: true, margin: "normal" },
-                    actionBar: {
-                      actions: ['cancel', 'accept'],
-                      translations: {
-                        cancel: 'Avbryt',
-                        accept: 'Spara',
-                      },
-                    },
-                    desktopPaper: {
-                      sx: {
-                        '& .MuiTypography-root': { fontSize: '1rem' },
-                        '& .MuiPickersDay-root': { fontSize: '1rem' },
-                        '& .MuiClock-squareMask': { transform: 'scale(0.9)' },
-                        '& .MuiDateTimePickerToolbar-dateContainer': {
-                          display: 'flex',
-                          alignItems: 'baseline',
-                          '& > *': { marginRight: '8px', fontSize: '1rem' }
-                        },
-                        '& .MuiDateTimePickerToolbar-timeContainer': {
-                          display: 'flex',
-                          alignItems: 'baseline',
-                          '& > *': { marginRight: '8px', fontSize: '1rem' }
-                        }
-                      }
-                    }
-                  }}
-                  format="d MMM yyyy HH:mm"
-                />
-                <DateTimePicker
-                  label="Sluttid"
-                  value={editedEvent.endTime ? new Date(editedEvent.endTime) : null}
-                  onChange={(newValue) => handleInputChange({ target: { name: 'endTime', value: newValue } })}
-                  slotProps={{
-                    textField: { fullWidth: true, margin: "normal" },
-                    desktopPaper: {
-                      sx: {
-                        '& .MuiTypography-root': { fontSize: '1rem' },
-                        '& .MuiPickersDay-root': { fontSize: '1rem' },
-                        '& .MuiClock-squareMask': { transform: 'scale(0.9)' },
-                        '& .MuiDateTimePickerToolbar-dateContainer': {
-                          display: 'flex',
-                          alignItems: 'baseline',
-                          '& > *': { marginRight: '8px' }
-                        },
-                        '& .MuiDateTimePickerToolbar-timeContainer': {
-                          display: 'flex',
-                          alignItems: 'baseline',
-                          '& > *': { marginRight: '8px' }
-                        }
-                      }
-                    }
-                  }}
-                  format="d MMM yyyy HH:mm"
-                />
-              </LocalizationProvider>
+              {commonFields}
             </>
           );
         case 'openingHours':
@@ -328,26 +307,7 @@ const EventDetailsModal = ({ isOpen, onClose, event, onEventUpdate, onEventCreat
                   ))}
                 </Select>
               </FormControl>
-              <TextField
-                label="Öppnar"
-                type="datetime-local"
-                name="openingTime"
-                value={editedEvent.openingTime ? new Date(editedEvent.openingTime).toISOString().slice(0, 16) : ''}
-                onChange={handleInputChange}
-                fullWidth
-                margin="normal"
-                InputLabelProps={{ shrink: true }}
-              />
-              <TextField
-                label="Stänger"
-                type="datetime-local"
-                name="closingTime"
-                value={editedEvent.closingTime ? new Date(editedEvent.closingTime).toISOString().slice(0, 16) : ''}
-                onChange={handleInputChange}
-                fullWidth
-                margin="normal"
-                InputLabelProps={{ shrink: true }}
-              />
+              {commonFields}
               <FormControl fullWidth margin="normal">
                 <InputLabel>Ansvarig ledare</InputLabel>
                 <Select
@@ -386,32 +346,14 @@ const EventDetailsModal = ({ isOpen, onClose, event, onEventUpdate, onEventCreat
                   name="instructorId"
                   value={editedEvent.instructorId || ''}
                   onChange={handleInputChange}
+                  label="Instruktör"
                 >
                   {filteredInstructors.map(instructor => (
                     <MenuItem key={instructor.id} value={instructor.id}>{instructor.firstName} {instructor.lastName}</MenuItem>
                   ))}
                 </Select>
               </FormControl>
-              <TextField
-                label="Starttid"
-                type="datetime-local"
-                name="startTime"
-                value={editedEvent.startTime ? new Date(editedEvent.startTime).toISOString().slice(0, 16) : ''}
-                onChange={handleInputChange}
-                fullWidth
-                margin="normal"
-                InputLabelProps={{ shrink: true }}
-              />
-              <TextField
-                label="Sluttid"
-                type="datetime-local"
-                name="endTime"
-                value={editedEvent.endTime ? new Date(editedEvent.endTime).toISOString().slice(0, 16) : ''}
-                onChange={handleInputChange}
-                fullWidth
-                margin="normal"
-                InputLabelProps={{ shrink: true }}
-              />
+              {commonFields}
             </>
           );
         default:
